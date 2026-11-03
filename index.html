@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Color Theory</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="color.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <h1>Color Theory</h1>
+      <p class="tagline">A usable scheme, fast.</p>
+    </div>
+    <div id="theme-toggle" class="segmented" role="group" aria-label="Palette theme">
+      <button id="theme-light" type="button" class="is-active" aria-pressed="true">Light</button>
+      <button id="theme-dark" type="button" aria-pressed="false">Dark</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="rail" aria-label="Palette controls">
+      <section class="panel">
+        <h2 class="panel-title">Base color</h2>
+        <input id="hex-input" class="hex-input" type="text" value="#6366F1"
+               spellcheck="false" autocomplete="off" aria-label="Hex color"
+               aria-describedby="hex-error">
+        <p id="hex-error" class="field-error" role="alert" hidden>Enter a 3- or 6-digit hex.</p>
+        <div id="preset-grid" class="preset-grid" role="group" aria-label="Preset colors"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">Harmony</h2>
+        <div id="harmony-list" class="chroma-list" role="group" aria-label="Harmony rule"></div>
+        <div class="dial">
+          <div id="hue-ring" class="hue-ring" role="slider" tabindex="0"
+               aria-label="Hue" aria-valuemin="0" aria-valuemax="359" aria-valuenow="0">
+            <div class="hue-ring-center"></div>
+            <div id="hue-handle" class="hue-handle"></div>
+          </div>
+        </div>
+        <div class="hue-controls">
+          <label for="hue-slider">Hue</label>
+          <input id="hue-slider" type="range" min="0" max="359" value="0" aria-label="Hue degrees">
+          <input id="hue-value" class="hue-value" type="number" min="0" max="359" value="0"
+                 aria-label="Hue value in degrees">
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">Suggestions</h2>
+        <div id="suggestions" class="suggestions"></div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="panel">
+        <div class="toolbar">
+          <h2 class="panel-title">Palette</h2>
+          <button id="copy-all" type="button" class="btn btn-primary">Copy all</button>
+        </div>
+        <div id="swatch-row" class="swatch-row"></div>
+        <div id="extras-row" class="extras-row"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">Contrast</h2>
+        <ul id="contrast-list" class="contrast-list"></ul>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">In context</h2>
+        <div id="preview-card" class="preview-card">
+          <div class="preview-nav">
+            <span class="preview-dot" aria-hidden="true"></span>
+            <span class="preview-links" aria-hidden="true"><i></i><i></i><i></i></span>
+          </div>
+          <div class="preview-body">
+            <h3 class="preview-heading">Ship something beautiful</h3>
+            <p class="preview-text">A palette that reads well before it looks good.</p>
+            <button type="button" class="preview-button">Get started</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="toolbar toolbar-wrap">
+          <h2 class="panel-title">Export</h2>
+          <div class="toolbar-controls">
+            <div id="export-format" class="segmented" role="group" aria-label="Export format">
+              <button type="button" data-format="hex" class="is-active" aria-pressed="true">Hex</button>
+              <button type="button" data-format="css" aria-pressed="false">CSS</button>
+            </div>
+            <div id="export-themes" class="segmented" role="group" aria-label="Export themes">
+              <button type="button" data-themes="light" class="is-active" aria-pressed="true">Light</button>
+              <button type="button" data-themes="dark" aria-pressed="false">Dark</button>
+              <button type="button" data-themes="both" aria-pressed="false">Both</button>
+            </div>
+          </div>
+        </div>
+        <pre id="export-output" class="export-output" tabindex="0" aria-label="Exported palette"></pre>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
