@@ -112,9 +112,9 @@ no separate shuffle action.
 
 ## Preview
 
-A small app card — nav, heading, body line, button — painted with the current
-scheme, so the palette is judged on a real-looking surface rather than as
-abstract chips.
+A large app card — nav, heading, body copy, two buttons, tags, and a small
+stats panel — painted with every role, so the palette is judged on a
+real-looking surface rather than as abstract chips.
 
 ## Export
 

@@ -287,6 +287,7 @@
     els.previewCard.style.setProperty('--pv-surface', palette.surface);
     els.previewCard.style.setProperty('--pv-text', palette.text);
     els.previewCard.style.setProperty('--pv-accent', palette.accent);
+    els.previewCard.style.setProperty('--pv-accent2', palette.accent2);
     els.previewCard.style.setProperty('--pv-accent-soft', palette.accentSoft);
   }
 

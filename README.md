@@ -31,6 +31,6 @@ node --test tests/color.test.js tests/palette.test.js
 - Five UI roles — `bg`, `surface`, `text`, `accent`, `accent-2` — plus
   `accent-soft` and any extra harmony swatches.
 - WCAG contrast ratios with AA / AAA / fail labels.
-- A live preview of the palette on a small app card.
+- A live preview of the palette on a full app card, using every role.
 - Copy any swatch, copy the whole palette, and export as hex or CSS custom
   properties, for one theme or both.

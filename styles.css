@@ -540,63 +540,224 @@ input {
   --pv-surface: #1e293b;
   --pv-text: #f8fafc;
   --pv-accent: #6366f1;
+  --pv-accent2: #a763f1;
   --pv-accent-soft: #a5b4fc;
   background: var(--pv-bg);
   color: var(--pv-text);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 28px;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
 }
 
 .preview-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  gap: 16px;
 }
 
-.preview-dot {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+.preview-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
   background: var(--pv-accent);
+}
+
+.preview-wordmark {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .preview-links {
   display: flex;
-  gap: 8px;
+  gap: 14px;
 }
 
 .preview-links i {
   display: block;
-  width: 22px;
-  height: 5px;
+  width: 26px;
+  height: 6px;
   border-radius: 3px;
-  background: var(--pv-surface);
+  background: currentColor;
+  opacity: 0.35;
+}
+
+.preview-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--pv-accent2);
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  flex: 1;
+}
+
+.preview-copy {
+  min-width: 0;
+}
+
+.preview-eyebrow {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  margin-bottom: 10px;
 }
 
 .preview-heading {
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin-bottom: 6px;
+  font-size: 26px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 650;
+  margin-bottom: 10px;
 }
 
 .preview-text {
-  font-size: 12px;
+  font-size: 13px;
   opacity: 0.78;
-  margin-bottom: 14px;
-  max-width: 34ch;
+  margin-bottom: 18px;
+  max-width: 36ch;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
 }
 
 .preview-button {
-  border: 0;
-  border-radius: 6px;
-  padding: 7px 14px;
+  display: inline-block;
+  border-radius: 7px;
+  padding: 9px 16px;
   font-size: 12px;
   font-weight: 600;
   background: var(--pv-accent);
   color: #fff;
-  cursor: pointer;
+}
+
+.preview-button.is-soft {
+  background: var(--pv-accent-soft);
+  color: var(--pv-text);
+}
+
+.preview-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preview-tag {
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: var(--pv-accent-soft);
+  color: var(--pv-text);
+}
+
+.preview-tag.is-surface {
+  background: var(--pv-surface);
+}
+
+.preview-panel {
+  background: var(--pv-surface);
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.preview-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.preview-panel-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.preview-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--pv-accent-soft);
+  color: var(--pv-text);
+}
+
+.preview-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 86px;
+  margin-bottom: 16px;
+}
+
+.preview-bars i {
+  flex: 1;
+  border-radius: 4px 4px 2px 2px;
+  background: var(--pv-accent);
+  opacity: 0.9;
+}
+
+.preview-bars i.is-alt {
+  background: var(--pv-accent2);
+  opacity: 1;
+}
+
+.preview-stats {
+  display: flex;
+  gap: 22px;
+}
+
+.preview-stats div {
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-stats strong {
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.preview-stats span {
+  font-size: 10px;
+  opacity: 0.62;
+}
+
+@media (max-width: 700px) {
+  .preview-card {
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .preview-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .preview-heading {
+    font-size: 22px;
+  }
 }
 
 /* ---------- Export ---------- */
