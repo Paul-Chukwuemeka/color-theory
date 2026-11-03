@@ -41,6 +41,8 @@ test('extreme accents produce a valid palette', () => {
     const p = C.buildPalette({ hex, harmonyId: 'complementary', mode: 'dark' });
     assert.strictEqual(p.accent, hex);
     assert.ok(Number.isFinite(C.contrastRatio(p.text, p.bg)));
+    assert.ok(C.contrastRatio(p.text, p.bg) >= 4.5, `${hex} text/bg`);
+    assert.ok(C.contrastRatio(p.text, p.surface) >= 4.5, `${hex} text/surface`);
   }
 });
 
@@ -96,4 +98,12 @@ test('css export emits custom properties', () => {
   const both = C.formatExport({ light, dark }, { format: 'css', themes: 'both' });
   assert.ok(both.includes(':root {'));
   assert.ok(both.includes('[data-theme="dark"] {'));
+});
+
+test('dark-only css export uses :root so it works when pasted', () => {
+  const light = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light' });
+  const dark = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'dark' });
+  const out = C.formatExport({ light, dark }, { format: 'css', themes: 'dark' });
+  assert.ok(out.startsWith(':root {'));
+  assert.ok(!out.includes('[data-theme="dark"]'));
 });

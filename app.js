@@ -146,6 +146,9 @@
 
     if (opts.syncHex !== false) {
       els.hexInput.value = state.hex;
+      els.hexInput.classList.remove('is-invalid');
+      els.hexInput.removeAttribute('aria-invalid');
+      els.hexError.hidden = true;
     }
 
     renderPresetState();
@@ -414,6 +417,7 @@
         render({ syncHex: false });
       } else {
         els.hexInput.classList.add('is-invalid');
+        els.hexInput.setAttribute('aria-invalid', 'true');
         els.hexError.hidden = false;
       }
     });
@@ -421,6 +425,7 @@
     els.hexInput.addEventListener('blur', function () {
       els.hexInput.value = state.hex;
       els.hexInput.classList.remove('is-invalid');
+      els.hexInput.removeAttribute('aria-invalid');
       els.hexError.hidden = true;
     });
 
@@ -429,7 +434,12 @@
     });
 
     els.hueValue.addEventListener('change', function () {
-      var value = Number(els.hueValue.value);
+      var raw = els.hueValue.value.trim();
+      if (raw === '') {
+        els.hueValue.value = String(Math.round(activeHsl().h));
+        return;
+      }
+      var value = Number(raw);
       if (Number.isFinite(value)) setHue(value);
     });
 

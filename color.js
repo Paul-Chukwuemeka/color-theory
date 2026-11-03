@@ -307,7 +307,8 @@
 
     var parts = list.map(function (theme) {
       if (format === 'css') {
-        return cssBlock(palettes[theme], theme === 'dark' ? '[data-theme="dark"]' : ':root');
+        var selector = themes === 'both' && theme === 'dark' ? '[data-theme="dark"]' : ':root';
+        return cssBlock(palettes[theme], selector);
       }
       var body = hexBlock(palettes[theme]);
       return themes === 'both' ? '/* ' + theme + ' */\n' + body : body;

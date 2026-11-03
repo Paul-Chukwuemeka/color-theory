@@ -80,12 +80,13 @@ base hue, the harmony rule, and the palette together.
 | Split-complementary | base + 150° | base + 210° |
 | Triadic | base + 120° | base + 240° |
 | Tetradic | base + 90° | base + 180°, base + 270° |
-| Monochromatic | base, lighter and less saturated | base, darker |
+| Monochromatic | base, lighter and less saturated | — |
 
 ## Light and dark
 
-- The toggle recomputes `bg`, `surface`, and `text` only. Both accents and
-  `accent-soft` stay fixed.
+- The toggle recomputes `bg`, `surface`, and `text` only. Both accents stay
+  fixed. `accent-soft` is re-derived from each theme's own background, because
+  a light tint on a dark background is unusable.
 - `text` is auto-derived to pass WCAG AA against both `bg` and `surface`, so
   the neutral pairs never fail.
 - Accent pairs are **not** forced to pass. They are measured and flagged.
