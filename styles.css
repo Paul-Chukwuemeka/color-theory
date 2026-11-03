@@ -411,6 +411,7 @@ input {
 }
 
 .swatch-chip {
+  display: block;
   height: 84px;
 }
 
