@@ -239,6 +239,7 @@
       els.hueValue.value = String(hue);
     }
     els.hueRing.setAttribute('aria-valuenow', String(hue));
+    els.hueRing.setAttribute('aria-valuetext', hue + ' degrees, ' + C.hueName(hue));
   }
 
   function renderContrast(palette) {
@@ -351,6 +352,56 @@
     });
   }
 
+  /* ---------- Clipboard ---------- */
+
+  var toastTimer = null;
+
+  function showToast(message) {
+    els.toast.textContent = message;
+    els.toast.classList.add('is-visible');
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(function () {
+      els.toast.classList.remove('is-visible');
+    }, 1600);
+  }
+
+  function fallbackCopy(text) {
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.top = '-1000px';
+    area.style.left = '-1000px';
+    document.body.appendChild(area);
+    area.select();
+
+    var ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch (err) {
+      ok = false;
+    }
+
+    document.body.removeChild(area);
+    return ok;
+  }
+
+  function copyText(text, confirmation) {
+    var message = confirmation || ('Copied ' + text);
+
+    function succeed() {
+      showToast(message);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(succeed, function () {
+        if (fallbackCopy(text)) succeed();
+      });
+    } else if (fallbackCopy(text)) {
+      succeed();
+    }
+  }
+
   /* ---------- Events ---------- */
 
   function wireInputs() {
@@ -388,6 +439,96 @@
 
     els.themeDark.addEventListener('click', function () {
       setTheme('dark');
+    });
+
+    wireRing();
+    wireExport();
+    wireCopy();
+  }
+
+  function wireExport() {
+    Array.prototype.forEach.call(els.exportFormat.children, function (button) {
+      button.addEventListener('click', function () {
+        state.exportFormat = button.dataset.format === 'css' ? 'css' : 'hex';
+        render();
+      });
+    });
+
+    Array.prototype.forEach.call(els.exportThemes.children, function (button) {
+      button.addEventListener('click', function () {
+        var value = button.dataset.themes;
+        state.exportThemes = value === 'dark' || value === 'both' ? value : 'light';
+        render();
+      });
+    });
+  }
+
+  function wireCopy() {
+    els.copyAll.addEventListener('click', function () {
+      copyText(els.exportOutput.textContent, 'Palette copied');
+    });
+
+    els.swatchRow.addEventListener('click', function (event) {
+      var button = event.target.closest('.swatch');
+      if (!button) return;
+      copyText(button.dataset.hex);
+    });
+
+    els.extrasRow.addEventListener('click', function (event) {
+      var button = event.target.closest('.extra');
+      if (!button) return;
+      copyText(button.dataset.hex);
+    });
+  }
+
+  function hueFromPointer(event) {
+    var rect = els.hueRing.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var deg = Math.atan2(event.clientY - cy, event.clientX - cx) * 180 / Math.PI + 90;
+    return C.wrapHue(deg);
+  }
+
+  function wireRing() {
+    var pointerId = null;
+
+    els.hueRing.addEventListener('pointerdown', function (event) {
+      pointerId = event.pointerId;
+      try { els.hueRing.setPointerCapture(pointerId); } catch (err) { /* no capture */ }
+      setHue(hueFromPointer(event));
+      event.preventDefault();
+    });
+
+    els.hueRing.addEventListener('pointermove', function (event) {
+      if (pointerId !== event.pointerId) return;
+      setHue(hueFromPointer(event));
+    });
+
+    function release(event) {
+      if (pointerId !== event.pointerId) return;
+      pointerId = null;
+      try { els.hueRing.releasePointerCapture(event.pointerId); } catch (err) { /* already released */ }
+    }
+
+    els.hueRing.addEventListener('pointerup', release);
+    els.hueRing.addEventListener('pointercancel', release);
+
+    els.hueRing.addEventListener('keydown', function (event) {
+      var hue = activeHsl().h;
+      var step = event.shiftKey ? 10 : 1;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
+        setHue(hue + step);
+        event.preventDefault();
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
+        setHue(hue - step);
+        event.preventDefault();
+      } else if (event.key === 'Home') {
+        setHue(0);
+        event.preventDefault();
+      } else if (event.key === 'End') {
+        setHue(359);
+        event.preventDefault();
+      }
     });
   }
 
