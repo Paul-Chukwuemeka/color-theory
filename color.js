@@ -122,6 +122,124 @@
     return (light + 0.05) / (dark + 0.05);
   }
 
+  var HARMONIES = [
+    { id: 'analogous', label: 'Analogous', partner: 30, extras: [60] },
+    { id: 'complementary', label: 'Complementary', partner: 180, extras: [] },
+    { id: 'split-complementary', label: 'Split', partner: 150, extras: [210] },
+    { id: 'triadic', label: 'Triadic', partner: 120, extras: [240] },
+    { id: 'tetradic', label: 'Tetradic', partner: 90, extras: [180, 270] },
+    { id: 'monochromatic', label: 'Mono', partner: null, extras: [] }
+  ];
+
+  function harmonyById(id) {
+    for (var i = 0; i < HARMONIES.length; i++) {
+      if (HARMONIES[i].id === id) return HARMONIES[i];
+    }
+    return HARMONIES[0];
+  }
+
+  function hueName(deg) {
+    var names = ['Red', 'Orange', 'Amber', 'Lime', 'Green', 'Teal',
+      'Cyan', 'Blue', 'Indigo', 'Violet', 'Magenta', 'Rose'];
+    return names[Math.round(wrapHue(deg) / 30) % 12];
+  }
+
+  function partnerHue(baseHue, harmonyId) {
+    var rule = harmonyById(harmonyId);
+    if (rule.partner === null) return null;
+    return wrapHue(baseHue + rule.partner);
+  }
+
+  function extraHues(baseHue, harmonyId) {
+    return harmonyById(harmonyId).extras.map(function (d) {
+      return wrapHue(baseHue + d);
+    });
+  }
+
+  function contrastLevel(ratio) {
+    if (ratio >= 7) return 'AAA';
+    if (ratio >= 4.5) return 'AA';
+    return 'fail';
+  }
+
+  function makeContrast(key, label, fg, bg) {
+    var ratio = contrastRatio(fg, bg);
+    return { key: key, label: label, fg: fg, bg: bg, ratio: ratio, level: contrastLevel(ratio) };
+  }
+
+  function deriveText(h, mode, bg, surface) {
+    var lightMode = mode === 'light';
+    var lightness = lightMode ? 0.12 : 0.96;
+    var step = lightMode ? -0.02 : 0.02;
+    var sat = lightMode ? 0.30 : 0.25;
+    var candidate = lightMode ? '#000000' : '#FFFFFF';
+
+    for (var i = 0; i < 60; i++) {
+      candidate = rgbToHex(hslToRgb({ h: h, s: sat, l: lightness }));
+      if (contrastRatio(candidate, bg) >= 4.5 && contrastRatio(candidate, surface) >= 4.5) {
+        return candidate;
+      }
+      lightness += step;
+      if (lightness < 0) lightness = 0;
+      if (lightness > 1) lightness = 1;
+    }
+    return lightMode ? '#000000' : '#FFFFFF';
+  }
+
+  function buildPalette(opts) {
+    var accent = normalizeHex(opts.hex);
+    if (!accent) throw new Error('Invalid hex: ' + opts.hex);
+
+    var mode = opts.mode === 'dark' ? 'dark' : 'light';
+    var light = mode === 'light';
+    var hsl = rgbToHsl(hexToRgb(accent));
+    var h = hsl.h;
+    var s = hsl.s;
+    var l = hsl.l;
+
+    var bg = rgbToHex(hslToRgb(light
+      ? { h: h, s: 0.24, l: 0.985 }
+      : { h: h, s: 0.26, l: 0.075 }));
+    var surface = rgbToHex(hslToRgb(light
+      ? { h: h, s: 0.22, l: 0.955 }
+      : { h: h, s: 0.24, l: 0.115 }));
+    var text = deriveText(h, mode, bg, surface);
+
+    var rule = harmonyById(opts.harmonyId);
+    var accent2;
+    if (rule.partner === null) {
+      accent2 = rgbToHex(hslToRgb({
+        h: h, s: s * 0.55, l: Math.min(l + 0.22, 0.95)
+      }));
+    } else {
+      accent2 = rgbToHex(hslToRgb({ h: wrapHue(h + rule.partner), s: s, l: l }));
+    }
+
+    var extras = rule.extras.map(function (d) {
+      return rgbToHex(hslToRgb({ h: wrapHue(h + d), s: s, l: l }));
+    });
+
+    var accentSoft = mix(bg, accent, light ? 0.16 : 0.30);
+
+    return {
+      bg: bg,
+      surface: surface,
+      text: text,
+      accent: accent,
+      accent2: accent2,
+      accentSoft: accentSoft,
+      extras: extras,
+      contrast: [
+        makeContrast('text-bg', 'Text on background', text, bg),
+        makeContrast('text-surface', 'Text on surface', text, surface),
+        makeContrast('white-accent', 'White on accent', '#FFFFFF', accent),
+        makeContrast('black-accent', 'Black on accent', '#000000', accent),
+        makeContrast('white-accent2', 'White on accent-2', '#FFFFFF', accent2),
+        makeContrast('black-accent2', 'Black on accent-2', '#000000', accent2)
+      ]
+    };
+  }
+
   return {
     normalizeHex: normalizeHex,
     hexToRgb: hexToRgb,
@@ -131,6 +249,12 @@
     wrapHue: wrapHue,
     mix: mix,
     relativeLuminance: relativeLuminance,
-    contrastRatio: contrastRatio
+    contrastRatio: contrastRatio,
+    HARMONIES: HARMONIES,
+    hueName: hueName,
+    partnerHue: partnerHue,
+    extraHues: extraHues,
+    contrastLevel: contrastLevel,
+    buildPalette: buildPalette
   };
 });
