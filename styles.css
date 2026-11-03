@@ -458,6 +458,18 @@ input {
   cursor: pointer;
 }
 
+.extra.is-fill-only {
+  border-style: dashed;
+}
+
+.extra-ratio {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 9px;
+  padding-left: 4px;
+  border-left: 1px solid var(--line);
+}
+
 .extra i {
   width: 16px;
   height: 16px;
@@ -545,6 +557,12 @@ input {
   --pv-on-accent: #ffffff;
   --pv-on-soft: #0f172a;
   --pv-on-surface: #0f172a;
+  --pv-success: #15803d;
+  --pv-warning: #b45309;
+  --pv-danger: #b91c1c;
+  --pv-on-success: #ffffff;
+  --pv-on-warning: #ffffff;
+  --pv-on-danger: #ffffff;
   background: var(--pv-bg);
   color: var(--pv-text);
   border-radius: 10px;
@@ -746,6 +764,35 @@ input {
 .preview-stats span {
   font-size: 10px;
   opacity: 0.62;
+}
+
+.preview-states {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.preview-state {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 99px;
+}
+
+.preview-state.is-success {
+  background: var(--pv-success);
+  color: var(--pv-on-success);
+}
+
+.preview-state.is-warning {
+  background: var(--pv-warning);
+  color: var(--pv-on-warning);
+}
+
+.preview-state.is-danger {
+  background: var(--pv-danger);
+  color: var(--pv-on-danger);
 }
 
 @media (max-width: 700px) {

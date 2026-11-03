@@ -44,7 +44,7 @@ Two ways in, both ending at the same place:
 
 ## Roles
 
-Five UI roles plus optional extras:
+Ten UI roles plus optional extras:
 
 | Role | What it is |
 | --- | --- |
@@ -52,8 +52,12 @@ Five UI roles plus optional extras:
 | `surface` | Cards and panels. One step off `bg`. |
 | `text` | Body text. Tinted near-white or near-black. |
 | `accent` | The base color, kept as close to the input as possible. |
-| `accent-2` | The harmony's partner hue. |
+| `accent-2` | The harmony's partner hue, never closer than 60° to `accent`. |
 | `accent-soft` | A tint of `accent`. Used for fills and hover states. |
+| `success` | Fixed semantic green, tuned per theme. Not derived from the base hue. |
+| `warning` | Fixed semantic amber, tuned per theme. |
+| `danger` | Fixed semantic red, tuned per theme. |
+| `on-*` | Black or white label color for each filled role, chosen by measured contrast. |
 
 Any harmony hues beyond the first two (the third in triadic, the third and
 fourth in tetradic) are shown as **extra swatches** with their hex codes. They
@@ -75,12 +79,19 @@ base hue, the harmony rule, and the palette together.
 
 | Rule | `accent-2` hue | Extra swatches |
 | --- | --- | --- |
-| Analogous | base + 30° | base + 60° |
+| Analogous | base + 60° | base + 30°, base − 30° |
 | Complementary | base + 180° | — |
 | Split-complementary | base + 150° | base + 210° |
 | Triadic | base + 120° | base + 240° |
 | Tetradic | base + 90° | base + 180°, base + 270° |
 | Monochromatic | base, lighter and less saturated | — |
+
+`accent-2` is never closer than 60° to `accent`, so the two stay
+distinguishable as UI states. Monochromatic is the deliberate exception: it
+varies lightness within one hue instead of moving the hue.
+
+Extra swatches are for fills and decoration. Their contrast against `bg` is
+shown next to each one, and low-contrast extras are marked as fill-only.
 
 ## Light and dark
 
@@ -94,14 +105,19 @@ base hue, the harmony rule, and the palette together.
 
 ## Contrast checks
 
-Four pairs, each with its ratio and an AA / AAA / fail label:
+Twelve pairs, each with its ratio and an AA / AAA / fail label:
 
 - `text` on `bg`
 - `text` on `surface`
-- white on `accent`
-- black on `accent`
+- `accent` on `bg` — can it be used as text or an icon?
+- label on `accent`
+- `accent-2` on `bg`
+- label on `accent-2`
+- each semantic role on `bg`, and each label on its fill
 
-`accent-2` gets the same white/black pair in the palette row.
+The `on-*` rows always pick black or white by measured contrast, so label
+rows should pass. The `* on bg` rows are honest: a bright accent usually fails
+as text, and the tool says so rather than hiding it.
 
 ## Suggestions
 
@@ -125,6 +141,8 @@ unreadable text on an accent.
 - An output box you can also select by hand, showing hex by default with a CSS
   custom properties toggle.
 - A light + dark switch in the output box that emits both blocks.
+- Every role ships with its `on-*` label color, so a consumer never has to
+  guess whether text on a fill should be black or white.
 
 Output format: uppercase six-digit hex, one role per line. CSS mode emits
 `--color-<role>` properties.

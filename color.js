@@ -123,7 +123,7 @@
   }
 
   var HARMONIES = [
-    { id: 'analogous', label: 'Analogous', partner: 30, extras: [60] },
+    { id: 'analogous', label: 'Analogous', partner: 60, extras: [30, -30] },
     { id: 'complementary', label: 'Complementary', partner: 180, extras: [] },
     { id: 'split-complementary', label: 'Split', partner: 150, extras: [210] },
     { id: 'triadic', label: 'Triadic', partner: 120, extras: [240] },
@@ -147,7 +147,9 @@
   function partnerHue(baseHue, harmonyId) {
     var rule = harmonyById(harmonyId);
     if (rule.partner === null) return null;
-    return wrapHue(baseHue + rule.partner);
+    var delta = rule.partner;
+    if (Math.abs(delta) < 60) delta = delta < 0 ? -60 : 60;
+    return wrapHue(baseHue + delta);
   }
 
   function extraHues(baseHue, harmonyId) {
@@ -221,6 +223,16 @@
 
     var accentSoft = mix(bg, accent, light ? 0.16 : 0.30);
 
+    var semantic = light
+      ? { success: '#15803D', warning: '#B45309', danger: '#B91C1C' }
+      : { success: '#4ADE80', warning: '#FBBF24', danger: '#F87171' };
+
+    var onAccent = pickReadable(accent, '#FFFFFF');
+    var onAccent2 = pickReadable(accent2, '#FFFFFF');
+    var onSuccess = pickReadable(semantic.success, '#FFFFFF');
+    var onWarning = pickReadable(semantic.warning, '#FFFFFF');
+    var onDanger = pickReadable(semantic.danger, '#FFFFFF');
+
     return {
       bg: bg,
       surface: surface,
@@ -228,14 +240,28 @@
       accent: accent,
       accent2: accent2,
       accentSoft: accentSoft,
+      success: semantic.success,
+      warning: semantic.warning,
+      danger: semantic.danger,
+      onAccent: onAccent,
+      onAccent2: onAccent2,
+      onSuccess: onSuccess,
+      onWarning: onWarning,
+      onDanger: onDanger,
       extras: extras,
       contrast: [
         makeContrast('text-bg', 'Text on background', text, bg),
         makeContrast('text-surface', 'Text on surface', text, surface),
-        makeContrast('white-accent', 'White on accent', '#FFFFFF', accent),
-        makeContrast('black-accent', 'Black on accent', '#000000', accent),
-        makeContrast('white-accent2', 'White on accent-2', '#FFFFFF', accent2),
-        makeContrast('black-accent2', 'Black on accent-2', '#000000', accent2)
+        makeContrast('accent-bg', 'Accent on background', accent, bg),
+        makeContrast('on-accent', 'Label on accent', onAccent, accent),
+        makeContrast('accent2-bg', 'Accent-2 on background', accent2, bg),
+        makeContrast('on-accent2', 'Label on accent-2', onAccent2, accent2),
+        makeContrast('success-bg', 'Success on background', semantic.success, bg),
+        makeContrast('on-success', 'Label on success', onSuccess, semantic.success),
+        makeContrast('warning-bg', 'Warning on background', semantic.warning, bg),
+        makeContrast('on-warning', 'Label on warning', onWarning, semantic.warning),
+        makeContrast('danger-bg', 'Danger on background', semantic.danger, bg),
+        makeContrast('on-danger', 'Label on danger', onDanger, semantic.danger)
       ]
     };
   }
@@ -277,7 +303,15 @@
       ['text', palette.text],
       ['accent', palette.accent],
       ['accent-2', palette.accent2],
-      ['accent-soft', palette.accentSoft]
+      ['accent-soft', palette.accentSoft],
+      ['success', palette.success],
+      ['warning', palette.warning],
+      ['danger', palette.danger],
+      ['on-accent', palette.onAccent],
+      ['on-accent-2', palette.onAccent2],
+      ['on-success', palette.onSuccess],
+      ['on-warning', palette.onWarning],
+      ['on-danger', palette.onDanger]
     ];
     palette.extras.forEach(function (hex, i) {
       entries.push(['extra-' + (i + 1), hex]);

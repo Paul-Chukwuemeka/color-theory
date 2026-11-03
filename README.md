@@ -28,9 +28,12 @@ node --test tests/color.test.js tests/palette.test.js
 - Six harmony rules: analogous, complementary, split-complementary, triadic,
   tetradic, monochromatic.
 - A draggable hue ring and a hue slider.
-- Five UI roles — `bg`, `surface`, `text`, `accent`, `accent-2` — plus
-  `accent-soft` and any extra harmony swatches.
-- WCAG contrast ratios with AA / AAA / fail labels.
+- Nine color roles — `bg`, `surface`, `text`, `accent`, `accent-2`,
+  `accent-soft`, `success`, `warning`, `danger` — plus harmony extras and a
+  matching `on-*` label color for every fill.
+- `accent-2` is always at least 60° from `accent`, so the two stay distinct.
+- WCAG contrast ratios with AA / AAA / fail labels, including whether each
+  accent can be used as text on the background.
 - A live preview of the palette on a full app card, using every role.
 - Copy any swatch, copy the whole palette, and export as hex or CSS custom
   properties, for one theme or both.

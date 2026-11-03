@@ -24,7 +24,10 @@
     { key: 'text', prop: 'text' },
     { key: 'accent', prop: 'accent' },
     { key: 'accent-2', prop: 'accent2' },
-    { key: 'accent-soft', prop: 'accentSoft' }
+    { key: 'accent-soft', prop: 'accentSoft' },
+    { key: 'success', prop: 'success' },
+    { key: 'warning', prop: 'warning' },
+    { key: 'danger', prop: 'danger' }
   ];
 
   var state = {
@@ -217,11 +220,14 @@
 
     els.extrasRow.innerHTML = '';
     palette.extras.forEach(function (hex, index) {
+      var ratio = C.contrastRatio(hex, palette.bg);
       var button = document.createElement('button');
       button.type = 'button';
       button.className = 'extra';
+      if (ratio < 4.5) button.classList.add('is-fill-only');
       button.dataset.hex = hex;
-      button.setAttribute('aria-label', 'Copy extra-' + (index + 1) + ' ' + hex);
+      button.setAttribute('aria-label',
+        'Copy extra-' + (index + 1) + ' ' + hex + ', ' + ratio.toFixed(1) + ' to 1 on the background');
 
       var dot = document.createElement('i');
       dot.style.background = hex;
@@ -229,8 +235,16 @@
       var label = document.createElement('span');
       label.textContent = 'extra-' + (index + 1) + ' ' + hex;
 
+      var meta = document.createElement('em');
+      meta.className = 'extra-ratio';
+      meta.textContent = ratio.toFixed(1) + ':1';
+
       button.appendChild(dot);
       button.appendChild(label);
+      button.appendChild(meta);
+      if (ratio < 4.5) {
+        button.title = 'Low contrast on the background — use as a fill, not text';
+      }
       els.extrasRow.appendChild(button);
     });
   }
@@ -292,6 +306,12 @@
     els.previewCard.style.setProperty('--pv-on-accent', C.pickReadable(palette.accent, '#FFFFFF'));
     els.previewCard.style.setProperty('--pv-on-soft', C.pickReadable(palette.accentSoft, palette.text));
     els.previewCard.style.setProperty('--pv-on-surface', C.pickReadable(palette.surface, palette.text));
+    els.previewCard.style.setProperty('--pv-success', palette.success);
+    els.previewCard.style.setProperty('--pv-warning', palette.warning);
+    els.previewCard.style.setProperty('--pv-danger', palette.danger);
+    els.previewCard.style.setProperty('--pv-on-success', palette.onSuccess);
+    els.previewCard.style.setProperty('--pv-on-warning', palette.onWarning);
+    els.previewCard.style.setProperty('--pv-on-danger', palette.onDanger);
   }
 
   function renderSuggestions(hsl) {
