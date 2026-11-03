@@ -240,6 +240,82 @@
     };
   }
 
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function buildSuggestions(input) {
+    var h = input.h;
+    var s = input.s;
+    var l = input.l;
+    return [
+      {
+        id: 'a',
+        name: hueName(h - 10) + ' Analogue',
+        harmonyId: 'analogous',
+        hex: rgbToHex(hslToRgb({ h: h - 10, s: clamp(s, 0.45, 0.85), l: l }))
+      },
+      {
+        id: 'b',
+        name: hueName(h) + ' Triad',
+        harmonyId: 'triadic',
+        hex: rgbToHex(hslToRgb({ h: h, s: clamp(s, 0.5, 0.9), l: clamp(l + 0.05, 0.25, 0.7) }))
+      },
+      {
+        id: 'c',
+        name: hueName(h + 15) + ' Split',
+        harmonyId: 'split-complementary',
+        hex: rgbToHex(hslToRgb({ h: h + 15, s: clamp(s, 0.4, 0.8), l: clamp(l - 0.05, 0.25, 0.7) }))
+      }
+    ];
+  }
+
+  function roleEntries(palette) {
+    var entries = [
+      ['bg', palette.bg],
+      ['surface', palette.surface],
+      ['text', palette.text],
+      ['accent', palette.accent],
+      ['accent-2', palette.accent2],
+      ['accent-soft', palette.accentSoft]
+    ];
+    palette.extras.forEach(function (hex, i) {
+      entries.push(['extra-' + (i + 1), hex]);
+    });
+    return entries;
+  }
+
+  function cssBlock(palette, selector) {
+    var lines = [selector + ' {'];
+    roleEntries(palette).forEach(function (entry) {
+      lines.push('  --color-' + entry[0] + ': ' + entry[1] + ';');
+    });
+    lines.push('}');
+    return lines.join('\n');
+  }
+
+  function hexBlock(palette) {
+    return roleEntries(palette).map(function (entry) {
+      return entry[0].padEnd(12) + ' ' + entry[1];
+    }).join('\n');
+  }
+
+  function formatExport(palettes, opts) {
+    var format = opts.format === 'css' ? 'css' : 'hex';
+    var themes = opts.themes || 'light';
+    var list = themes === 'both' ? ['light', 'dark'] : [themes];
+
+    var parts = list.map(function (theme) {
+      if (format === 'css') {
+        return cssBlock(palettes[theme], theme === 'dark' ? '[data-theme="dark"]' : ':root');
+      }
+      var body = hexBlock(palettes[theme]);
+      return themes === 'both' ? '/* ' + theme + ' */\n' + body : body;
+    });
+
+    return parts.join('\n\n');
+  }
+
   return {
     normalizeHex: normalizeHex,
     hexToRgb: hexToRgb,
@@ -255,6 +331,8 @@
     partnerHue: partnerHue,
     extraHues: extraHues,
     contrastLevel: contrastLevel,
-    buildPalette: buildPalette
+    buildPalette: buildPalette,
+    buildSuggestions: buildSuggestions,
+    formatExport: formatExport
   };
 });

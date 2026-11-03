@@ -61,3 +61,39 @@ test('contrast entries are labelled and levelled', () => {
   assert.strictEqual(C.contrastLevel(4.6), 'AA');
   assert.strictEqual(C.contrastLevel(3), 'fail');
 });
+
+test('suggestions are three deterministic, valid schemes', () => {
+  const a = C.buildSuggestions({ h: 240, s: 0.7, l: 0.55 });
+  const b = C.buildSuggestions({ h: 240, s: 0.7, l: 0.55 });
+  assert.deepStrictEqual(a, b);
+  assert.strictEqual(a.length, 3);
+  assert.deepStrictEqual(a.map((s) => s.harmonyId), ['analogous', 'triadic', 'split-complementary']);
+  for (const s of a) {
+    assert.ok(C.normalizeHex(s.hex), `${s.name} hex`);
+    assert.ok(s.name.length > 0);
+  }
+});
+
+test('hex export lists roles one per line', () => {
+  const light = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light' });
+  const dark = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'dark' });
+  const out = C.formatExport({ light, dark }, { format: 'hex', themes: 'light' });
+  const lines = out.split('\n');
+  assert.strictEqual(lines.length, 7);
+  assert.ok(lines[0].startsWith('bg'));
+  assert.ok(/^bg\s+#[0-9A-F]{6}$/.test(lines[0]));
+  assert.ok(lines.some((l) => /^accent-2\s+#[0-9A-F]{6}$/.test(l)));
+});
+
+test('css export emits custom properties', () => {
+  const light = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light' });
+  const dark = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'dark' });
+  const single = C.formatExport({ light, dark }, { format: 'css', themes: 'light' });
+  assert.ok(single.startsWith(':root {'));
+  assert.ok(single.includes('--color-bg: #'));
+  assert.ok(!single.includes('[data-theme="dark"]'));
+
+  const both = C.formatExport({ light, dark }, { format: 'css', themes: 'both' });
+  assert.ok(both.includes(':root {'));
+  assert.ok(both.includes('[data-theme="dark"] {'));
+});
