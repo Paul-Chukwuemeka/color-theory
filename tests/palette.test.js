@@ -107,3 +107,10 @@ test('dark-only css export uses :root so it works when pasted', () => {
   assert.ok(out.startsWith(':root {'));
   assert.ok(!out.includes('[data-theme="dark"]'));
 });
+
+test('pickReadable keeps the preferred color only when it reads', () => {
+  assert.strictEqual(C.pickReadable('#00FF00', '#FFFFFF'), '#000000');
+  assert.strictEqual(C.pickReadable('#0B0D14', '#151628'), '#FFFFFF');
+  assert.strictEqual(C.pickReadable('#FAFAFC', '#151628'), '#151628');
+  assert.ok(C.contrastRatio(C.pickReadable('#00FF00', '#FFFFFF'), '#00FF00') >= 4.5);
+});

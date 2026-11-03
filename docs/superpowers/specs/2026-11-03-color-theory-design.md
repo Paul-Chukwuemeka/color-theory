@@ -114,7 +114,9 @@ no separate shuffle action.
 
 A large app card — nav, heading, body copy, two buttons, tags, and a small
 stats panel — painted with every role, so the palette is judged on a
-real-looking surface rather than as abstract chips.
+real-looking surface rather than as abstract chips. Button labels and chips
+pick black or white by measured contrast, so the preview never shows
+unreadable text on an accent.
 
 ## Export
 

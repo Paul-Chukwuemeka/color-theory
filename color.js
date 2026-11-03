@@ -300,6 +300,13 @@
     }).join('\n');
   }
 
+  function pickReadable(bgHex, preferredHex) {
+    if (contrastRatio(preferredHex, bgHex) >= 4.5) return preferredHex;
+    return contrastRatio('#000000', bgHex) >= contrastRatio('#FFFFFF', bgHex)
+      ? '#000000'
+      : '#FFFFFF';
+  }
+
   function formatExport(palettes, opts) {
     var format = opts.format === 'css' ? 'css' : 'hex';
     var themes = opts.themes || 'light';
@@ -334,6 +341,7 @@
     contrastLevel: contrastLevel,
     buildPalette: buildPalette,
     buildSuggestions: buildSuggestions,
+    pickReadable: pickReadable,
     formatExport: formatExport
   };
 });

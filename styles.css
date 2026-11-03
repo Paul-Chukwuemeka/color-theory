@@ -542,6 +542,9 @@ input {
   --pv-accent: #6366f1;
   --pv-accent2: #a763f1;
   --pv-accent-soft: #a5b4fc;
+  --pv-on-accent: #ffffff;
+  --pv-on-soft: #0f172a;
+  --pv-on-surface: #0f172a;
   background: var(--pv-bg);
   color: var(--pv-text);
   border-radius: 10px;
@@ -650,12 +653,12 @@ input {
   font-size: 12px;
   font-weight: 600;
   background: var(--pv-accent);
-  color: #fff;
+  color: var(--pv-on-accent);
 }
 
 .preview-button.is-soft {
   background: var(--pv-accent-soft);
-  color: var(--pv-text);
+  color: var(--pv-on-soft);
 }
 
 .preview-tags {
@@ -669,11 +672,12 @@ input {
   padding: 3px 9px;
   border-radius: 99px;
   background: var(--pv-accent-soft);
-  color: var(--pv-text);
+  color: var(--pv-on-soft);
 }
 
 .preview-tag.is-surface {
   background: var(--pv-surface);
+  color: var(--pv-on-surface);
 }
 
 .preview-panel {
@@ -701,7 +705,7 @@ input {
   padding: 2px 8px;
   border-radius: 99px;
   background: var(--pv-accent-soft);
-  color: var(--pv-text);
+  color: var(--pv-on-soft);
 }
 
 .preview-bars {

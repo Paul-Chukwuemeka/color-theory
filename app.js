@@ -289,6 +289,9 @@
     els.previewCard.style.setProperty('--pv-accent', palette.accent);
     els.previewCard.style.setProperty('--pv-accent2', palette.accent2);
     els.previewCard.style.setProperty('--pv-accent-soft', palette.accentSoft);
+    els.previewCard.style.setProperty('--pv-on-accent', C.pickReadable(palette.accent, '#FFFFFF'));
+    els.previewCard.style.setProperty('--pv-on-soft', C.pickReadable(palette.accentSoft, palette.text));
+    els.previewCard.style.setProperty('--pv-on-surface', C.pickReadable(palette.surface, palette.text));
   }
 
   function renderSuggestions(hsl) {
