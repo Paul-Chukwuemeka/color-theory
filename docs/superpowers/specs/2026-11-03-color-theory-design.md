@@ -214,6 +214,31 @@ Each cell is `light / dark`.
   not for text on the background, and the `* on bg` rows flag that honestly
   rather than forcing the colour.
 
+## In-context mockups
+
+The preview card is not one generic screen: it is the screen of the product the
+app type says you are building. Each of the seven types gets its own mockup,
+and every mockup paints all nine roles, so the palette is judged in the
+habitat it will actually live in.
+
+| Type | The card shows |
+| --- | --- |
+| General | A product card: nav, headline, body, a primary and a soft button, two tags, a small chart and a stats pair. |
+| Dashboard | Three KPI tiles with deltas, a bar chart, and a table of rows with status pills. |
+| Education | A lesson: subject pills, a question, a progress track, a correct and a wrong answer, a streak badge. |
+| Kids | A playful screen: a mascot blob, a big start button, a round secondary button, a star reward, a row of progress dots. |
+| Fintech | A balance card: an amount, a trend chip, a card graphic, transaction rows, a category pill, a pay button. |
+| Health | A reading: a value, a status chip, a range bar, a schedule list, a caution, an alert. |
+| Developer | A terminal: a prompt, coloured code lines, a build status, a branch chip, a deploy button. |
+
+The mockup is markup only — every colour comes from the palette through CSS
+custom properties, so switching type or base colour repaints it without
+rebuilding it.
+
+Elements that need a role carry `data-role="<role>"`. When a role is not in
+the palette (a tiny palette, say) the element using it is hidden rather than
+left blank.
+
 ## Light and dark
 
 - The toggle recomputes `bg`, `surface`, and `text` only. Both accents stay

@@ -49,14 +49,6 @@
     extrasRow: document.getElementById('extras-row'),
     contrastList: document.getElementById('contrast-list'),
     previewCard: document.getElementById('preview-card'),
-    previewAvatar: document.getElementById('preview-avatar'),
-    previewAltBar: document.getElementById('preview-alt-bar'),
-    previewSoftButton: document.getElementById('preview-soft-button'),
-    previewTagSoft: document.getElementById('preview-tag-soft'),
-    previewTagSurface: document.getElementById('preview-tag-surface'),
-    previewChipSuccess: document.getElementById('preview-chip-success'),
-    previewChipWarning: document.getElementById('preview-chip-warning'),
-    previewChipDanger: document.getElementById('preview-chip-danger'),
     suggestions: document.getElementById('suggestions'),
     exportFormat: document.getElementById('export-format'),
     exportThemes: document.getElementById('export-themes'),
@@ -386,14 +378,13 @@
     els.previewCard.style.setProperty('--pv-on-warning', C.pickReadable(warning, '#FFFFFF'));
     els.previewCard.style.setProperty('--pv-on-danger', C.pickReadable(danger, '#FFFFFF'));
 
-    els.previewAvatar.hidden = !palette.accent2;
-    els.previewAltBar.hidden = !palette.accent2;
-    els.previewSoftButton.hidden = !palette.accentSoft;
-    els.previewTagSoft.hidden = !palette.accentSoft;
-    els.previewTagSurface.hidden = !palette.surface;
-    els.previewChipSuccess.hidden = !palette.success;
-    els.previewChipWarning.hidden = !palette.warning;
-    els.previewChipDanger.hidden = !palette.danger;
+    els.previewCard.innerHTML = window.Preview.markup(state.appType);
+
+    // A role that is not in the palette cannot be painted, so the element
+    // that needed it steps out of the layout instead of showing nothing.
+    Array.prototype.forEach.call(els.previewCard.querySelectorAll('[data-role]'), function (element) {
+      element.hidden = !palette[element.dataset.role];
+    });
   }
 
   function renderSuggestions(hsl) {

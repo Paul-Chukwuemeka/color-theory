@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Color Theory</title>
-  <link rel="stylesheet" href="styles.css?v=8">
-  <script src="color.js?v=8" defer></script>
-  <script src="app.js?v=8" defer></script>
+  <link rel="stylesheet" href="styles.css?v=9">
+  <script src="color.js?v=9" defer></script>
+  <script src="preview.js?v=9" defer></script>
+  <script src="app.js?v=9" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -93,57 +94,7 @@
 
       <section class="panel">
         <h2 class="panel-title">In context</h2>
-        <div id="preview-card" class="preview-card">
-          <div class="preview-nav">
-            <span class="preview-brand">
-              <span class="preview-logo" aria-hidden="true"></span>
-              <span class="preview-wordmark">Acme</span>
-            </span>
-            <span class="preview-links" aria-hidden="true"><i></i><i></i><i></i></span>
-            <span class="preview-avatar" id="preview-avatar" aria-hidden="true"></span>
-          </div>
-
-          <div class="preview-grid">
-            <div class="preview-copy">
-              <span class="preview-eyebrow">Palette in context</span>
-              <h3 class="preview-heading">Ship something beautiful</h3>
-              <p class="preview-text">Every color you see here comes from your scheme — the ones listed in the palette above.</p>
-              <div class="preview-actions">
-                <span class="preview-button">Get started</span>
-                <span class="preview-button is-soft" id="preview-soft-button">See details</span>
-              </div>
-              <div class="preview-tags">
-                <span class="preview-tag" id="preview-tag-soft">accent-soft</span>
-                <span class="preview-tag is-surface" id="preview-tag-surface">surface</span>
-              </div>
-            </div>
-
-            <div class="preview-panel">
-              <div class="preview-panel-head">
-                <span class="preview-panel-title">This week</span>
-                <span class="preview-badge">+18%</span>
-              </div>
-              <div class="preview-bars" aria-hidden="true">
-                <i style="height:40%"></i>
-                <i style="height:58%"></i>
-                <i style="height:46%"></i>
-                <i style="height:72%"></i>
-                <i style="height:54%"></i>
-                <i class="is-alt" id="preview-alt-bar" style="height:100%"></i>
-                <i style="height:66%"></i>
-              </div>
-              <div class="preview-stats">
-                <div><strong>2.4k</strong><span>Users</span></div>
-                <div><strong>98%</strong><span>Uptime</span></div>
-              </div>
-              <div class="preview-states">
-                <span class="preview-state is-success" id="preview-chip-success">Correct</span>
-                <span class="preview-state is-warning" id="preview-chip-warning">Streak 7</span>
-                <span class="preview-state is-danger" id="preview-chip-danger">Wrong</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div id="preview-card" class="preview-card"></div>
       </section>
 
       <section class="panel">
