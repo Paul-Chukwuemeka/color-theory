@@ -49,14 +49,6 @@
     extrasRow: document.getElementById('extras-row'),
     contrastList: document.getElementById('contrast-list'),
     previewCard: document.getElementById('preview-card'),
-    previewAvatar: document.getElementById('preview-avatar'),
-    previewAltBar: document.getElementById('preview-alt-bar'),
-    previewSoftButton: document.getElementById('preview-soft-button'),
-    previewTagSoft: document.getElementById('preview-tag-soft'),
-    previewTagSurface: document.getElementById('preview-tag-surface'),
-    previewChipSuccess: document.getElementById('preview-chip-success'),
-    previewChipWarning: document.getElementById('preview-chip-warning'),
-    previewChipDanger: document.getElementById('preview-chip-danger'),
     suggestions: document.getElementById('suggestions'),
     exportFormat: document.getElementById('export-format'),
     exportThemes: document.getElementById('export-themes'),
@@ -377,6 +369,10 @@
     els.previewCard.style.setProperty('--pv-accent2', accent2);
     els.previewCard.style.setProperty('--pv-accent-soft', accentSoft);
     els.previewCard.style.setProperty('--pv-on-accent', C.pickReadable(palette.accent, '#FFFFFF'));
+    // Each label colour is measured against the fill it sits on. on-accent-2
+    // is the palette's own token for accent-2; on-soft and on-surface are
+    // measured against the soft tint and the surface respectively.
+    els.previewCard.style.setProperty('--pv-on-accent2', palette.onAccent2 || '#FFFFFF');
     els.previewCard.style.setProperty('--pv-on-soft', C.pickReadable(accentSoft, palette.text));
     els.previewCard.style.setProperty('--pv-on-surface', C.pickReadable(surface, palette.text));
     els.previewCard.style.setProperty('--pv-success', success);
@@ -386,14 +382,18 @@
     els.previewCard.style.setProperty('--pv-on-warning', C.pickReadable(warning, '#FFFFFF'));
     els.previewCard.style.setProperty('--pv-on-danger', C.pickReadable(danger, '#FFFFFF'));
 
-    els.previewAvatar.hidden = !palette.accent2;
-    els.previewAltBar.hidden = !palette.accent2;
-    els.previewSoftButton.hidden = !palette.accentSoft;
-    els.previewTagSoft.hidden = !palette.accentSoft;
-    els.previewTagSurface.hidden = !palette.surface;
-    els.previewChipSuccess.hidden = !palette.success;
-    els.previewChipWarning.hidden = !palette.warning;
-    els.previewChipDanger.hidden = !palette.danger;
+    els.previewCard.innerHTML = window.Preview.markup(state.appType);
+
+    // A role that is not in the palette cannot be painted, so the element
+    // that needed it steps out of the layout instead of showing nothing.
+    // Elements that carry words keep them: their colour sits in a child.
+    Array.prototype.forEach.call(
+      els.previewCard.querySelectorAll('[data-role], [data-text]'),
+      function (element) {
+        var role = element.dataset.role || element.dataset.text;
+        element.hidden = !palette[role];
+      }
+    );
   }
 
   function renderSuggestions(hsl) {

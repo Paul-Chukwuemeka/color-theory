@@ -39,6 +39,8 @@ node --test tests/color.test.js tests/palette.test.js tests/app-types.test.js
   accent can be used as text on the background.
 - A palette size control: pick anywhere from 3 to 21 colors. Small palettes
   drop roles in priority order, larger ones add extra swatches.
-- A live preview of the palette on a full app card, using every role.
+- A live preview of the palette on the screen of the app type you picked: a
+  product card, a dashboard, a lesson, a kids screen, a balance card, a vitals
+  card, or a terminal. Every role is painted somewhere in it.
 - Copy any swatch, copy the whole palette, and export as hex or CSS custom
   properties, for one theme or both.
