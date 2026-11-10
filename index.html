@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Color Theory</title>
-  <link rel="stylesheet" href="styles.css?v=6">
-  <script src="color.js?v=6" defer></script>
-  <script src="app.js?v=6" defer></script>
+  <link rel="stylesheet" href="styles.css?v=7">
+  <script src="color.js?v=7" defer></script>
+  <script src="app.js?v=7" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -51,16 +51,18 @@
 
       <section class="panel">
         <h2 class="panel-title">Palette size</h2>
-        <div class="size-control">
-          <button id="size-minus" type="button" class="stepper" aria-label="One color fewer">&minus;</button>
-          <input id="size-input" type="number" min="3" max="21" value="11" inputmode="numeric"
-                 aria-label="Number of colors in the palette" aria-describedby="size-summary">
-          <button id="size-plus" type="button" class="stepper" aria-label="One color more">+</button>
+        <div class="size-row">
+          <div class="size-control">
+            <button id="size-minus" type="button" class="stepper" aria-label="One color fewer">&minus;</button>
+            <input id="size-input" type="number" min="3" max="21" value="11" inputmode="numeric"
+                   aria-label="Number of colors in the palette" aria-describedby="size-summary">
+            <button id="size-plus" type="button" class="stepper" aria-label="One color more">+</button>
+          </div>
+          <p class="size-hint">
+            <span id="size-summary">9 roles + 2 extras</span>
+            <button id="size-auto" type="button" class="link-btn" hidden>Auto</button>
+          </p>
         </div>
-        <p class="size-hint">
-          <span id="size-summary">11 colors</span>
-          <button id="size-auto" type="button" class="link-btn" hidden>Auto</button>
-        </p>
       </section>
 
       <section class="panel">
