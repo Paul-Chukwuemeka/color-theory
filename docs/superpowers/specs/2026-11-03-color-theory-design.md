@@ -200,14 +200,19 @@ Each cell is `light / dark`.
 
 ### Invariants every type must keep
 
-- `accent-2` stays at least 60° from `accent`.
+- `accent-2` stays at least 60° from `accent`. The rule holds in the maths; an
+  8-bit hex can move a hue by a degree or two at the extremes of lightness, so
+  the emitted pair lands within that rounding.
 - `text` meets the type's floor on both `bg` and `surface`, and never below
   4.5:1.
 - The accent keeps the base color's hue. Types change saturation and
   lightness, never which color it is. The rule holds in the maths; an 8-bit
   hex can move a hue by a degree or two at the extremes of lightness, so the
   emitted colour lands within that rounding, not always on the exact number.
-- Semantic roles read on `bg`, and each `on-*` label color reads on its fill.
+- Semantic roles read on `bg` *as fills* — each `on-*` label color reads on its
+  fill. A type's brighter semantics (Kids, Dashboard) are chosen for the fill,
+  not for text on the background, and the `* on bg` rows flag that honestly
+  rather than forcing the colour.
 
 ## Light and dark
 

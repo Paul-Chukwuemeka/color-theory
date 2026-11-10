@@ -404,7 +404,8 @@
       var mini = C.buildPalette({
         hex: suggestion.hex,
         harmonyId: suggestion.harmonyId,
-        mode: state.mode
+        mode: state.mode,
+        appType: state.appType
       });
 
       var button = document.createElement('button');

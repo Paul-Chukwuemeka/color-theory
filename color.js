@@ -386,7 +386,9 @@
       var nextL = l + sign * offset;
       if (nextL > 0.95 || nextL < 0.08) nextL = l - sign * offset;
       var nextS = Math.max(0, s - 0.04 * (offset / 0.14));
-      if (type) nextS = shapeSaturation(nextS, type, 'accent');
+      // The saturation already carries the type's shaping; only the floor and
+      // the ceiling are applied here, so the rule is not applied twice.
+      if (type) nextS = Math.min(Math.max(nextS, type.accentSatMin), type.accentSatMax);
       out.push(rgbToHex(hslToRgb({ h: baseHue, s: nextS, l: nextL })));
       i++;
     }
@@ -467,12 +469,15 @@
   }
 
   function buildAccent2(hueValue, s, l, type) {
-    var raw = rgbToHex(hslToRgb({ h: hueValue, s: s, l: l }));
-    if (!shapesAccent(type, 'accent2')) return raw;
-    var a2 = rgbToHsl(hexToRgb(raw));
-    var a2Sat = shapeSaturation(a2.s, type, 'accent2');
-    var a2L = clamp(a2.l + type.accent2Light, 0.05, 0.95);
-    return rgbToHex(hslToRgb({ h: a2.h, s: a2Sat, l: a2L }));
+    if (!shapesAccent(type, 'accent2')) {
+      return rgbToHex(hslToRgb({ h: hueValue, s: s, l: l }));
+    }
+    // Shape in HSL space and keep the intended hue. Reading the hue back out
+    // of the raw colour would lose it whenever the base is achromatic, where
+    // the raw colour is a grey and every hue reads as 0.
+    var a2Sat = shapeSaturation(s, type, 'accent2');
+    var a2L = clamp(l + type.accent2Light, 0.05, 0.95);
+    return rgbToHex(hslToRgb({ h: hueValue, s: a2Sat, l: a2L }));
   }
 
   function buildPalette(opts) {

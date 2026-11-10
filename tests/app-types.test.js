@@ -62,7 +62,7 @@ test('kids lifts a washed out accent without changing its hue', () => {
 test('every type keeps the accent hue and 60 degrees of separation', () => {
   for (const type of C.APP_TYPES) {
     for (const harmonyId of ['analogous', 'complementary', 'split-complementary', 'triadic', 'tetradic', 'monochromatic']) {
-      for (const hex of ['#6366F1', '#1DE533', '#F97316', '#0B0D14']) {
+      for (const hex of ['#6366F1', '#1DE533', '#F97316', '#0B0D14', '#808080']) {
         const p = C.buildPalette({ hex, harmonyId, mode: 'light', appType: type.id });
         if (!p.accent2) continue;
         // The hue survives, to within the drift an 8 bit hex introduces.
@@ -116,6 +116,23 @@ test('extreme base colors still produce an in-range accent', () => {
       assert.ok(hsl.s >= 0 && hsl.s <= 1, `${type.id} ${hex} accent saturation`);
     }
   }
+});
+
+test('an achromatic base still gets a distinct accent-2', () => {
+  const p = C.buildPalette({ hex: '#808080', harmonyId: 'analogous', mode: 'light', appType: 'kids' });
+  const gapDegrees = gap(hueOf(p.accent), hueOf(p.accent2));
+  assert.ok(gapDegrees >= 60, `kids grey gap ${gapDegrees}`);
+  assert.ok(Math.abs(gap(hueOf(p.accent2), 60)) < 3, `accent-2 hue ${hueOf(p.accent2)}`);
+});
+
+test('monochromatic extras are shaped once, not twice', () => {
+  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'monochromatic', mode: 'light', appType: 'dashboard', size: 13 });
+  const accentSat = C.rgbToHsl(C.hexToRgb(p.accent)).s;
+  assert.strictEqual(p.extras.length, 4);
+  p.extras.forEach((hex) => {
+    const sat = C.rgbToHsl(C.hexToRgb(hex)).s;
+    assert.ok(Math.abs(sat - accentSat) < 0.09, `extra sat ${sat} vs accent ${accentSat}`);
+  });
 });
 
 test('app types carry their own semantics', () => {
