@@ -127,6 +127,86 @@ drawn, their contrast row is not listed, their `on-*` token is not exported,
 and the preview hides the element that used them. An `Auto` button returns to
 the harmony's natural size.
 
+## App types
+
+The base color alone produces one scheme shape. An **app type** is the second
+axis: it says what kind of product this is, and the scheme is derived to suit
+it. Seven types, chosen from chips in the rail above the base color.
+
+A type sets exactly five things:
+
+1. **Neutral recipe** — which hue tints `bg`/`surface`/`text`, and their
+   saturation and lightness. A fixed neutral hue means the neutrals ignore the
+   base color entirely (Fintech, Developer, Dashboard).
+2. **Accent treatment** — a saturation multiplier plus optional floor and
+   ceiling, a lightness trim, and for `accent-2` an optional warm hue.
+3. **Semantic colors** — `success`, `warning`, `danger` per theme.
+4. **Text contrast floor** — the minimum ratio `text` must reach on `bg` and
+   `surface`. Kids demands 7:1 (AAA); the rest demand 4.5:1.
+5. **Opening state** — the harmony rule and the theme the type starts in.
+
+Picking a type sets the harmony and the theme to that type's defaults. Picking
+a harmony chip afterwards overrides the harmony and leaves the type alone.
+
+**General is the default and reproduces today's behavior exactly:** neutrals
+tinted with the base hue, the base color kept verbatim as `accent`, the
+standard semantics, 4.5:1 text, analogous harmony, light theme. Every other
+type may adjust the base color, so with a type other than General the accent
+is the base color *shaped by the type*, not the typed hex.
+
+### Recipe values
+
+Values are `[light, dark]` pairs. `neutralSat` is the `bg` saturation;
+`surface` uses `neutralSat - 0.02`.
+
+| | General | Dashboard | Education | Kids | Fintech | Health | Developer |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `neutralHue` | base | 220 | 35 | 45 | 215 | 30 | 220 |
+| `neutralSat` | 0.24, 0.26 | 0.16, 0.18 | 0.22, 0.20 | 0.28, 0.24 | 0.14, 0.16 | 0.14, 0.12 | 0.16, 0.20 |
+| `neutralBgL` | 0.985, 0.075 | 0.975, 0.09 | 0.985, 0.08 | 0.99, 0.10 | 0.98, 0.08 | 0.985, 0.085 | 0.97, 0.085 |
+| `neutralSurfaceL` | 0.955, 0.115 | 0.935, 0.14 | 0.955, 0.125 | 0.965, 0.15 | 0.95, 0.12 | 0.955, 0.12 | 0.94, 0.13 |
+| `accentSat` | 1 | 0.9 | 1 | 1 | 0.85 | 0.8 | 1 |
+| `accentSatMax` | 1 | 0.9 | 1 | 1 | 0.55 | 0.6 | 0.95 |
+| `accentSatMin` | 0 | 0 | 0 | 0.68 | 0 | 0 | 0 |
+| `accentLight` | 0 | -0.02 | 0.02 | 0.02 | 0.02 | 0.04 | 0 |
+| `accent2Sat` | 1 | 0.85 | 1 | 1 | 0.85 | 0.8 | 1 |
+| `accent2SatMax` | 1 | 0.85 | 1 | 1 | 0.85 | 0.8 | 1 |
+| `accent2SatMin` | 0 | 0 | 0 | 0.6 | 0 | 0 | 0 |
+| `accent2Light` | 0 | 0.04 | 0.02 | 0.02 | 0.02 | 0.04 | 0 |
+| `accent2Hue` | partner | warm (35°) | partner | partner | partner | partner | partner |
+| `accentSoftMix` | 0.16, 0.30 | 0.14, 0.26 | 0.20, 0.32 | 0.24, 0.36 | 0.14, 0.26 | 0.14, 0.26 | 0.16, 0.30 |
+| `textRatio` | 4.5 | 4.5 | 4.5 | 7 | 4.5 | 4.5 | 4.5 |
+| `harmonyId` | analogous | split-complementary | triadic | analogous | complementary | split-complementary | tetradic |
+| `mode` | light | dark | light | light | light | light | dark |
+
+`accent2Hue: warm` sets `accent-2`'s hue to 35° (orange) for a second chart
+series that never blurs into the accent. If 35° would land within 60° of the
+accent, the harmony's partner hue is used instead, so the 60° separation rule
+holds for every type.
+
+### Semantics
+
+| Type | success | warning | danger |
+| --- | --- | --- | --- |
+| General | `#15803D` / `#4ADE80` | `#B45309` / `#FBBF24` | `#B91C1C` / `#F87171` |
+| Dashboard | `#16A34A` / `#4ADE80` | `#D97706` / `#FBBF24` | `#DC2626` / `#F87171` |
+| Education | `#16A34A` / `#4ADE80` | `#D97706` / `#FBBF24` | `#DC2626` / `#F87171` |
+| Kids | `#22C55E` / `#86EFAC` | `#EA580C` / `#FDBA74` | `#EF4444` / `#FCA5A5` |
+| Fintech | `#047857` / `#34D399` | `#B45309` / `#FBBF24` | `#B91C1C` / `#F87171` |
+| Health | `#4D7C0F` / `#A3E635` | `#B45309` / `#FDE047` | `#C2410C` / `#FDBA74` |
+| Developer | `#15803D` / `#4ADE80` | `#A16207` / `#FACC15` | `#DC2626` / `#F87171` |
+
+Each cell is `light / dark`.
+
+### Invariants every type must keep
+
+- `accent-2` stays at least 60° from `accent`.
+- `text` meets the type's floor on both `bg` and `surface`, and never below
+  4.5:1.
+- The accent keeps the base color's hue. Types change saturation and
+  lightness, never which color it is.
+- Semantic roles read on `bg`, and each `on-*` label color reads on its fill.
+
 ## Light and dark
 
 - The toggle recomputes `bg`, `surface`, and `text` only. Both accents stay
