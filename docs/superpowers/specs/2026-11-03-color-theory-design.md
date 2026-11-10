@@ -204,7 +204,9 @@ Each cell is `light / dark`.
 - `text` meets the type's floor on both `bg` and `surface`, and never below
   4.5:1.
 - The accent keeps the base color's hue. Types change saturation and
-  lightness, never which color it is.
+  lightness, never which color it is. The rule holds in the maths; an 8-bit
+  hex can move a hue by a degree or two at the extremes of lightness, so the
+  emitted colour lands within that rounding, not always on the exact number.
 - Semantic roles read on `bg`, and each `on-*` label color reads on its fill.
 
 ## Light and dark
