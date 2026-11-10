@@ -18,24 +18,13 @@
     { name: 'Slate', hex: '#64748B' }
   ];
 
-  var ROLES = [
-    { key: 'bg', prop: 'bg' },
-    { key: 'surface', prop: 'surface' },
-    { key: 'text', prop: 'text' },
-    { key: 'accent', prop: 'accent' },
-    { key: 'accent-2', prop: 'accent2' },
-    { key: 'accent-soft', prop: 'accentSoft' },
-    { key: 'success', prop: 'success' },
-    { key: 'warning', prop: 'warning' },
-    { key: 'danger', prop: 'danger' }
-  ];
-
   var state = {
     hex: '#6366F1',
     harmonyId: 'analogous',
     mode: 'light',
     exportFormat: 'hex',
-    exportThemes: 'light'
+    exportThemes: 'light',
+    size: null
   };
 
   var palettes = { light: null, dark: null };
@@ -45,6 +34,11 @@
     hexError: document.getElementById('hex-error'),
     presetGrid: document.getElementById('preset-grid'),
     harmonyList: document.getElementById('harmony-list'),
+    sizeInput: document.getElementById('size-input'),
+    sizeMinus: document.getElementById('size-minus'),
+    sizePlus: document.getElementById('size-plus'),
+    sizeAuto: document.getElementById('size-auto'),
+    sizeSummary: document.getElementById('size-summary'),
     hueRing: document.getElementById('hue-ring'),
     hueHandle: document.getElementById('hue-handle'),
     hueSlider: document.getElementById('hue-slider'),
@@ -53,6 +47,14 @@
     extrasRow: document.getElementById('extras-row'),
     contrastList: document.getElementById('contrast-list'),
     previewCard: document.getElementById('preview-card'),
+    previewAvatar: document.getElementById('preview-avatar'),
+    previewAltBar: document.getElementById('preview-alt-bar'),
+    previewSoftButton: document.getElementById('preview-soft-button'),
+    previewTagSoft: document.getElementById('preview-tag-soft'),
+    previewTagSurface: document.getElementById('preview-tag-surface'),
+    previewChipSuccess: document.getElementById('preview-chip-success'),
+    previewChipWarning: document.getElementById('preview-chip-warning'),
+    previewChipDanger: document.getElementById('preview-chip-danger'),
     suggestions: document.getElementById('suggestions'),
     exportFormat: document.getElementById('export-format'),
     exportThemes: document.getElementById('export-themes'),
@@ -72,8 +74,12 @@
   }
 
   function derive() {
-    palettes.light = C.buildPalette({ hex: state.hex, harmonyId: state.harmonyId, mode: 'light' });
-    palettes.dark = C.buildPalette({ hex: state.hex, harmonyId: state.harmonyId, mode: 'dark' });
+    palettes.light = C.buildPalette({
+      hex: state.hex, harmonyId: state.harmonyId, mode: 'light', size: state.size
+    });
+    palettes.dark = C.buildPalette({
+      hex: state.hex, harmonyId: state.harmonyId, mode: 'dark', size: state.size
+    });
   }
 
   function setHex(hex) {
@@ -86,6 +92,11 @@
 
   function setHarmony(id) {
     state.harmonyId = id;
+    render();
+  }
+
+  function setSize(size) {
+    state.size = C.normalizeSize(size);
     render();
   }
 
@@ -156,6 +167,7 @@
 
     renderPresetState();
     renderHarmonyState();
+    renderSizeControl(palette);
     renderSwatches(palette);
     renderDial(hue);
     renderContrast(palette);
@@ -186,10 +198,30 @@
     els.themeDark.setAttribute('aria-pressed', state.mode === 'dark' ? 'true' : 'false');
   }
 
+  function currentCount() {
+    var palette = activePalette();
+    return palette.roles.length + palette.extras.length;
+  }
+
+  function renderSizeControl(palette) {
+    var count = palette.roles.length + palette.extras.length;
+    var extras = palette.extras.length;
+
+    if (document.activeElement !== els.sizeInput) {
+      els.sizeInput.value = String(count);
+    }
+    els.sizeMinus.disabled = count <= C.SIZE_MIN;
+    els.sizePlus.disabled = count >= C.SIZE_MAX;
+    els.sizeSummary.textContent = extras
+      ? count + ' colors — ' + palette.roles.length + ' roles, ' + extras + (extras === 1 ? ' extra' : ' extras')
+      : count + ' colors — ' + palette.roles.length + ' roles';
+    els.sizeAuto.hidden = state.size === null;
+  }
+
   function renderSwatches(palette) {
     els.swatchRow.innerHTML = '';
-    ROLES.forEach(function (role) {
-      var hex = palette[role.prop];
+    palette.roles.forEach(function (role) {
+      var hex = role.hex;
       var button = document.createElement('button');
       button.type = 'button';
       button.className = 'swatch';
@@ -297,21 +329,37 @@
   }
 
   function renderPreview(palette) {
+    var surface = palette.surface || palette.bg;
+    var accent2 = palette.accent2 || palette.accent;
+    var accentSoft = palette.accentSoft || palette.accent;
+    var success = palette.success || palette.accent;
+    var warning = palette.warning || palette.accent;
+    var danger = palette.danger || palette.accent;
+
     els.previewCard.style.setProperty('--pv-bg', palette.bg);
-    els.previewCard.style.setProperty('--pv-surface', palette.surface);
+    els.previewCard.style.setProperty('--pv-surface', surface);
     els.previewCard.style.setProperty('--pv-text', palette.text);
     els.previewCard.style.setProperty('--pv-accent', palette.accent);
-    els.previewCard.style.setProperty('--pv-accent2', palette.accent2);
-    els.previewCard.style.setProperty('--pv-accent-soft', palette.accentSoft);
+    els.previewCard.style.setProperty('--pv-accent2', accent2);
+    els.previewCard.style.setProperty('--pv-accent-soft', accentSoft);
     els.previewCard.style.setProperty('--pv-on-accent', C.pickReadable(palette.accent, '#FFFFFF'));
-    els.previewCard.style.setProperty('--pv-on-soft', C.pickReadable(palette.accentSoft, palette.text));
-    els.previewCard.style.setProperty('--pv-on-surface', C.pickReadable(palette.surface, palette.text));
-    els.previewCard.style.setProperty('--pv-success', palette.success);
-    els.previewCard.style.setProperty('--pv-warning', palette.warning);
-    els.previewCard.style.setProperty('--pv-danger', palette.danger);
-    els.previewCard.style.setProperty('--pv-on-success', palette.onSuccess);
-    els.previewCard.style.setProperty('--pv-on-warning', palette.onWarning);
-    els.previewCard.style.setProperty('--pv-on-danger', palette.onDanger);
+    els.previewCard.style.setProperty('--pv-on-soft', C.pickReadable(accentSoft, palette.text));
+    els.previewCard.style.setProperty('--pv-on-surface', C.pickReadable(surface, palette.text));
+    els.previewCard.style.setProperty('--pv-success', success);
+    els.previewCard.style.setProperty('--pv-warning', warning);
+    els.previewCard.style.setProperty('--pv-danger', danger);
+    els.previewCard.style.setProperty('--pv-on-success', C.pickReadable(success, '#FFFFFF'));
+    els.previewCard.style.setProperty('--pv-on-warning', C.pickReadable(warning, '#FFFFFF'));
+    els.previewCard.style.setProperty('--pv-on-danger', C.pickReadable(danger, '#FFFFFF'));
+
+    els.previewAvatar.hidden = !palette.accent2;
+    els.previewAltBar.hidden = !palette.accent2;
+    els.previewSoftButton.hidden = !palette.accentSoft;
+    els.previewTagSoft.hidden = !palette.accentSoft;
+    els.previewTagSurface.hidden = !palette.surface;
+    els.previewChipSuccess.hidden = !palette.success;
+    els.previewChipWarning.hidden = !palette.warning;
+    els.previewChipDanger.hidden = !palette.danger;
   }
 
   function renderSuggestions(hsl) {
@@ -455,6 +503,33 @@
 
     els.hueSlider.addEventListener('input', function () {
       setHue(els.hueSlider.value);
+    });
+
+    els.sizeMinus.addEventListener('click', function () {
+      setSize(currentCount() - 1);
+    });
+
+    els.sizePlus.addEventListener('click', function () {
+      setSize(currentCount() + 1);
+    });
+
+    els.sizeInput.addEventListener('change', function () {
+      var raw = els.sizeInput.value.trim();
+      if (raw === '' || !isFinite(Number(raw))) {
+        els.sizeInput.value = String(currentCount());
+        return;
+      }
+      setSize(Number(raw));
+      els.sizeInput.value = String(currentCount());
+    });
+
+    els.sizeInput.addEventListener('blur', function () {
+      els.sizeInput.value = String(currentCount());
+    });
+
+    els.sizeAuto.addEventListener('click', function () {
+      state.size = null;
+      render();
     });
 
     els.hueValue.addEventListener('change', function () {

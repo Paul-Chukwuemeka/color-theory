@@ -157,3 +157,98 @@ test('pickReadable keeps the preferred color only when it reads', () => {
   assert.strictEqual(C.pickReadable('#FAFAFC', '#151628'), '#151628');
   assert.ok(C.contrastRatio(C.pickReadable('#00FF00', '#FFFFFF'), '#00FF00') >= 4.5);
 });
+
+function hueDistance(a, b) {
+  const diff = Math.abs(a - b) % 360;
+  return Math.min(diff, 360 - diff);
+}
+
+function sizeKeys(n) {
+  return C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light', size: n })
+    .roles.map((r) => r.key);
+}
+
+test('palette size is clamped to a workable range', () => {
+  const count = (n) => {
+    const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light', size: n });
+    return p.roles.length + p.extras.length;
+  };
+  assert.strictEqual(count(1), 3);
+  assert.strictEqual(count(0), 3);
+  assert.strictEqual(count(99), 21);
+  assert.strictEqual(count(3.6), 4);
+});
+
+test('a tiny palette keeps only bg, text and accent', () => {
+  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light', size: 3 });
+  assert.deepStrictEqual(p.roles.map((r) => r.key), ['bg', 'text', 'accent']);
+  assert.strictEqual(p.surface, null);
+  assert.strictEqual(p.accent2, null);
+  assert.strictEqual(p.accentSoft, null);
+  assert.strictEqual(p.success, null);
+  assert.strictEqual(p.warning, null);
+  assert.strictEqual(p.danger, null);
+  assert.strictEqual(p.onAccent2, null);
+  assert.deepStrictEqual(p.extras, []);
+});
+
+test('roles are dropped in priority order as the palette shrinks', () => {
+  assert.deepStrictEqual(sizeKeys(5), ['bg', 'surface', 'text', 'accent', 'accent-2']);
+  assert.deepStrictEqual(sizeKeys(6), ['bg', 'surface', 'text', 'accent', 'accent-2', 'accent-soft']);
+  assert.deepStrictEqual(sizeKeys(7), ['bg', 'surface', 'text', 'accent', 'accent-2', 'accent-soft', 'danger']);
+  assert.deepStrictEqual(sizeKeys(8), ['bg', 'surface', 'text', 'accent', 'accent-2', 'accent-soft', 'success', 'danger']);
+  assert.deepStrictEqual(sizeKeys(9), ['bg', 'surface', 'text', 'accent', 'accent-2', 'accent-soft', 'success', 'warning', 'danger']);
+});
+
+test('extra swatches fill the slots above the nine roles', () => {
+  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light', size: 13 });
+  const base = C.rgbToHsl(C.hexToRgb('#6366F1')).h;
+  const hueOf = (hex) => C.rgbToHsl(C.hexToRgb(hex)).h;
+  assert.strictEqual(p.extras.length, 4);
+  assert.ok(Math.abs(hueDistance(hueOf(p.extras[0]), base) - 30) < 1);
+  assert.ok(Math.abs(hueDistance(hueOf(p.extras[1]), base) - 30) < 1);
+  assert.ok(Math.abs(hueDistance(hueOf(p.extras[2]), base) - 137.508) < 1);
+  assert.ok(Math.abs(hueDistance(hueOf(p.extras[3]), base) - 84.984) < 1);
+});
+
+test('a harmony with no extras still fills up to the chosen size', () => {
+  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'complementary', mode: 'light', size: 11 });
+  const base = C.rgbToHsl(C.hexToRgb('#6366F1')).h;
+  assert.strictEqual(p.extras.length, 2);
+  assert.ok(p.extras.every((hex) => hueDistance(C.rgbToHsl(C.hexToRgb(hex)).h, base) > 20));
+});
+
+test('monochromatic extras stay in the same hue', () => {
+  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'monochromatic', mode: 'light', size: 13 });
+  const base = C.rgbToHsl(C.hexToRgb('#6366F1')).h;
+  assert.strictEqual(p.extras.length, 4);
+  assert.ok(p.extras.every((hex) => hueDistance(C.rgbToHsl(C.hexToRgb(hex)).h, base) < 6));
+  assert.ok(p.extras.every((hex) => hex !== p.accent));
+});
+
+test('export follows the palette size', () => {
+  const light = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light', size: 5 });
+  const dark = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'dark', size: 5 });
+  const out = C.formatExport({ light, dark }, { format: 'hex', themes: 'light' });
+  const keys = out.split('\n').map((line) => line.trim().split(/\s+/)[0]);
+  assert.deepStrictEqual(keys, ['bg', 'surface', 'text', 'accent', 'accent-2', 'on-accent', 'on-accent-2']);
+});
+
+test('contrast rows only cover the roles that exist', () => {
+  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light', size: 5 });
+  const keys = p.contrast.map((c) => c.key);
+  assert.ok(keys.includes('text-bg'));
+  assert.ok(keys.includes('accent-bg'));
+  assert.ok(keys.includes('on-accent'));
+  assert.ok(keys.includes('accent2-bg'));
+  assert.ok(keys.includes('on-accent2'));
+  assert.ok(!keys.some((k) => k.startsWith('success')));
+  assert.ok(!keys.some((k) => k.startsWith('warning')));
+  assert.ok(!keys.some((k) => k.startsWith('danger')));
+});
+
+test('the default palette is unchanged when no size is given', () => {
+  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light' });
+  assert.strictEqual(p.roles.length, 9);
+  assert.strictEqual(p.extras.length, 2);
+});

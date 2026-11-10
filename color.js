@@ -131,6 +131,40 @@
     { id: 'monochromatic', label: 'Mono', partner: null, extras: [] }
   ];
 
+  var SIZE_MIN = 3;
+  var SIZE_MAX = 21;
+  var GOLDEN_ANGLE = 137.508;
+  var MIN_HUE_GAP = 10;
+
+  // Display order is the order the swatches appear in. Priority is the order
+  // roles survive when the palette is shrunk: the first roles to go are the
+  // ones a small palette can live without.
+  var ROLE_DEFS = [
+    { key: 'bg', prop: 'bg', priority: 1 },
+    { key: 'surface', prop: 'surface', priority: 4 },
+    { key: 'text', prop: 'text', priority: 2 },
+    { key: 'accent', prop: 'accent', priority: 3 },
+    { key: 'accent-2', prop: 'accent2', priority: 5 },
+    { key: 'accent-soft', prop: 'accentSoft', priority: 6 },
+    { key: 'success', prop: 'success', priority: 8 },
+    { key: 'warning', prop: 'warning', priority: 9 },
+    { key: 'danger', prop: 'danger', priority: 7 }
+  ];
+
+  function hueGap(a, b) {
+    var diff = Math.abs(a - b) % 360;
+    return Math.min(diff, 360 - diff);
+  }
+
+  function normalizeSize(size) {
+    if (size === undefined || size === null || size === '') return null;
+    var n = Math.round(Number(size));
+    if (!isFinite(n)) return null;
+    if (n < SIZE_MIN) return SIZE_MIN;
+    if (n > SIZE_MAX) return SIZE_MAX;
+    return n;
+  }
+
   function harmonyById(id) {
     for (var i = 0; i < HARMONIES.length; i++) {
       if (HARMONIES[i].id === id) return HARMONIES[i];
@@ -155,6 +189,44 @@
   function extraHues(baseHue, harmonyId) {
     return harmonyById(harmonyId).extras.map(function (d) {
       return wrapHue(baseHue + d);
+    });
+  }
+
+  function monoExtras(baseHue, s, l, count) {
+    var out = [];
+    var i = 1;
+    while (out.length < count && i < 30) {
+      var offset = 0.14 * Math.ceil(i / 2);
+      var sign = i % 2 === 1 ? 1 : -1;
+      var nextL = l + sign * offset;
+      if (nextL > 0.95 || nextL < 0.08) nextL = l - sign * offset;
+      var nextS = Math.max(0, s - 0.04 * (offset / 0.14));
+      out.push(rgbToHex(hslToRgb({ h: baseHue, s: nextS, l: nextL })));
+      i++;
+    }
+    return out;
+  }
+
+  function generateExtras(baseHue, harmonyId, count, s, l) {
+    if (count <= 0) return [];
+    if (harmonyById(harmonyId).partner === null) {
+      return monoExtras(baseHue, s, l, count);
+    }
+    var taken = [baseHue];
+    var partner = partnerHue(baseHue, harmonyId);
+    if (partner !== null) taken.push(partner);
+    var hues = extraHues(baseHue, harmonyId);
+    var k = 1;
+    while (hues.length < count && k < 400) {
+      var candidate = wrapHue(baseHue + GOLDEN_ANGLE * k);
+      k++;
+      var clear = taken.concat(hues).every(function (hue) {
+        return hueGap(hue, candidate) >= MIN_HUE_GAP;
+      });
+      if (clear) hues.push(candidate);
+    }
+    return hues.slice(0, count).map(function (hue) {
+      return rgbToHex(hslToRgb({ h: hue, s: s, l: l }));
     });
   }
 
@@ -227,13 +299,21 @@
       ? { success: '#15803D', warning: '#B45309', danger: '#B91C1C' }
       : { success: '#4ADE80', warning: '#FBBF24', danger: '#F87171' };
 
-    var onAccent = pickReadable(accent, '#FFFFFF');
-    var onAccent2 = pickReadable(accent2, '#FFFFFF');
-    var onSuccess = pickReadable(semantic.success, '#FFFFFF');
-    var onWarning = pickReadable(semantic.warning, '#FFFFFF');
-    var onDanger = pickReadable(semantic.danger, '#FFFFFF');
+    var size = normalizeSize(opts.size);
+    var keptDefs;
+    if (size === null) {
+      keptDefs = ROLE_DEFS.slice();
+    } else {
+      keptDefs = ROLE_DEFS.slice()
+        .sort(function (a, b) { return a.priority - b.priority; })
+        .slice(0, Math.min(size, ROLE_DEFS.length));
+      extras = generateExtras(h, rule.id, size - keptDefs.length, s, l);
+    }
 
-    return {
+    var kept = {};
+    keptDefs.forEach(function (def) { kept[def.prop] = true; });
+
+    var colors = {
       bg: bg,
       surface: surface,
       text: text,
@@ -242,28 +322,61 @@
       accentSoft: accentSoft,
       success: semantic.success,
       warning: semantic.warning,
-      danger: semantic.danger,
-      onAccent: onAccent,
-      onAccent2: onAccent2,
-      onSuccess: onSuccess,
-      onWarning: onWarning,
-      onDanger: onDanger,
-      extras: extras,
-      contrast: [
-        makeContrast('text-bg', 'Text on background', text, bg),
-        makeContrast('text-surface', 'Text on surface', text, surface),
-        makeContrast('accent-bg', 'Accent on background', accent, bg),
-        makeContrast('on-accent', 'Label on accent', onAccent, accent),
-        makeContrast('accent2-bg', 'Accent-2 on background', accent2, bg),
-        makeContrast('on-accent2', 'Label on accent-2', onAccent2, accent2),
-        makeContrast('success-bg', 'Success on background', semantic.success, bg),
-        makeContrast('on-success', 'Label on success', onSuccess, semantic.success),
-        makeContrast('warning-bg', 'Warning on background', semantic.warning, bg),
-        makeContrast('on-warning', 'Label on warning', onWarning, semantic.warning),
-        makeContrast('danger-bg', 'Danger on background', semantic.danger, bg),
-        makeContrast('on-danger', 'Label on danger', onDanger, semantic.danger)
-      ]
+      danger: semantic.danger
     };
+
+    function roleColor(prop) {
+      return kept[prop] ? colors[prop] : null;
+    }
+
+    var palette = {
+      bg: roleColor('bg'),
+      surface: roleColor('surface'),
+      text: roleColor('text'),
+      accent: roleColor('accent'),
+      accent2: roleColor('accent2'),
+      accentSoft: roleColor('accentSoft'),
+      success: roleColor('success'),
+      warning: roleColor('warning'),
+      danger: roleColor('danger')
+    };
+
+    var onAccent = palette.accent ? pickReadable(palette.accent, '#FFFFFF') : null;
+    var onAccent2 = palette.accent2 ? pickReadable(palette.accent2, '#FFFFFF') : null;
+    var onSuccess = palette.success ? pickReadable(palette.success, '#FFFFFF') : null;
+    var onWarning = palette.warning ? pickReadable(palette.warning, '#FFFFFF') : null;
+    var onDanger = palette.danger ? pickReadable(palette.danger, '#FFFFFF') : null;
+
+    palette.onAccent = onAccent;
+    palette.onAccent2 = onAccent2;
+    palette.onSuccess = onSuccess;
+    palette.onWarning = onWarning;
+    palette.onDanger = onDanger;
+    palette.extras = extras;
+    palette.roles = ROLE_DEFS
+      .filter(function (def) { return kept[def.prop]; })
+      .map(function (def) { return { key: def.key, hex: colors[def.prop] }; });
+    palette.contrast = [];
+
+    function pushContrast(key, label, fg, background) {
+      if (!fg || !background) return;
+      palette.contrast.push(makeContrast(key, label, fg, background));
+    }
+
+    pushContrast('text-bg', 'Text on background', palette.text, palette.bg);
+    pushContrast('text-surface', 'Text on surface', palette.text, palette.surface);
+    pushContrast('accent-bg', 'Accent on background', palette.accent, palette.bg);
+    pushContrast('on-accent', 'Label on accent', onAccent, palette.accent);
+    pushContrast('accent2-bg', 'Accent-2 on background', palette.accent2, palette.bg);
+    pushContrast('on-accent2', 'Label on accent-2', onAccent2, palette.accent2);
+    pushContrast('success-bg', 'Success on background', palette.success, palette.bg);
+    pushContrast('on-success', 'Label on success', onSuccess, palette.success);
+    pushContrast('warning-bg', 'Warning on background', palette.warning, palette.bg);
+    pushContrast('on-warning', 'Label on warning', onWarning, palette.warning);
+    pushContrast('danger-bg', 'Danger on background', palette.danger, palette.bg);
+    pushContrast('on-danger', 'Label on danger', onDanger, palette.danger);
+
+    return palette;
   }
 
   function clamp(value, min, max) {
@@ -297,22 +410,20 @@
   }
 
   function roleEntries(palette) {
-    var entries = [
-      ['bg', palette.bg],
-      ['surface', palette.surface],
-      ['text', palette.text],
-      ['accent', palette.accent],
-      ['accent-2', palette.accent2],
-      ['accent-soft', palette.accentSoft],
-      ['success', palette.success],
-      ['warning', palette.warning],
-      ['danger', palette.danger],
+    var entries = [];
+    palette.roles.forEach(function (role) {
+      entries.push([role.key, role.hex]);
+    });
+    var onColors = [
       ['on-accent', palette.onAccent],
       ['on-accent-2', palette.onAccent2],
       ['on-success', palette.onSuccess],
       ['on-warning', palette.onWarning],
       ['on-danger', palette.onDanger]
     ];
+    onColors.forEach(function (entry) {
+      if (entry[1]) entries.push(entry);
+    });
     palette.extras.forEach(function (hex, i) {
       entries.push(['extra-' + (i + 1), hex]);
     });
@@ -376,6 +487,9 @@
     buildPalette: buildPalette,
     buildSuggestions: buildSuggestions,
     pickReadable: pickReadable,
-    formatExport: formatExport
+    formatExport: formatExport,
+    normalizeSize: normalizeSize,
+    SIZE_MIN: SIZE_MIN,
+    SIZE_MAX: SIZE_MAX
   };
 });
