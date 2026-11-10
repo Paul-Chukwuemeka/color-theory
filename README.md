@@ -34,6 +34,8 @@ node --test tests/color.test.js tests/palette.test.js
 - `accent-2` is always at least 60° from `accent`, so the two stay distinct.
 - WCAG contrast ratios with AA / AAA / fail labels, including whether each
   accent can be used as text on the background.
+- A palette size control: pick anywhere from 3 to 21 colors. Small palettes
+  drop roles in priority order, larger ones add extra swatches.
 - A live preview of the palette on a full app card, using every role.
 - Copy any swatch, copy the whole palette, and export as hex or CSS custom
   properties, for one theme or both.

@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Color Theory</title>
-  <link rel="stylesheet" href="styles.css?v=5">
-  <script src="color.js?v=5" defer></script>
-  <script src="app.js?v=5" defer></script>
+  <link rel="stylesheet" href="styles.css?v=6">
+  <script src="color.js?v=6" defer></script>
+  <script src="app.js?v=6" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -50,6 +50,20 @@
       </section>
 
       <section class="panel">
+        <h2 class="panel-title">Palette size</h2>
+        <div class="size-control">
+          <button id="size-minus" type="button" class="stepper" aria-label="One color fewer">&minus;</button>
+          <input id="size-input" type="number" min="3" max="21" value="11" inputmode="numeric"
+                 aria-label="Number of colors in the palette" aria-describedby="size-summary">
+          <button id="size-plus" type="button" class="stepper" aria-label="One color more">+</button>
+        </div>
+        <p class="size-hint">
+          <span id="size-summary">11 colors</span>
+          <button id="size-auto" type="button" class="link-btn" hidden>Auto</button>
+        </p>
+      </section>
+
+      <section class="panel">
         <h2 class="panel-title">Suggestions</h2>
         <div id="suggestions" class="suggestions"></div>
       </section>
@@ -79,21 +93,21 @@
               <span class="preview-wordmark">Acme</span>
             </span>
             <span class="preview-links" aria-hidden="true"><i></i><i></i><i></i></span>
-            <span class="preview-avatar" aria-hidden="true"></span>
+            <span class="preview-avatar" id="preview-avatar" aria-hidden="true"></span>
           </div>
 
           <div class="preview-grid">
             <div class="preview-copy">
               <span class="preview-eyebrow">Palette in context</span>
               <h3 class="preview-heading">Ship something beautiful</h3>
-              <p class="preview-text">Every color you see here comes from your scheme — background, surface, text, both accents, and the soft tint.</p>
+              <p class="preview-text">Every color you see here comes from your scheme — the ones listed in the palette above.</p>
               <div class="preview-actions">
                 <span class="preview-button">Get started</span>
-                <span class="preview-button is-soft">See details</span>
+                <span class="preview-button is-soft" id="preview-soft-button">See details</span>
               </div>
               <div class="preview-tags">
-                <span class="preview-tag">accent-soft</span>
-                <span class="preview-tag is-surface">surface</span>
+                <span class="preview-tag" id="preview-tag-soft">accent-soft</span>
+                <span class="preview-tag is-surface" id="preview-tag-surface">surface</span>
               </div>
             </div>
 
@@ -108,7 +122,7 @@
                 <i style="height:46%"></i>
                 <i style="height:72%"></i>
                 <i style="height:54%"></i>
-                <i class="is-alt" style="height:100%"></i>
+                <i class="is-alt" id="preview-alt-bar" style="height:100%"></i>
                 <i style="height:66%"></i>
               </div>
               <div class="preview-stats">
@@ -116,9 +130,9 @@
                 <div><strong>98%</strong><span>Uptime</span></div>
               </div>
               <div class="preview-states">
-                <span class="preview-state is-success">Correct</span>
-                <span class="preview-state is-warning">Streak 7</span>
-                <span class="preview-state is-danger">Wrong</span>
+                <span class="preview-state is-success" id="preview-chip-success">Correct</span>
+                <span class="preview-state is-warning" id="preview-chip-warning">Streak 7</span>
+                <span class="preview-state is-danger" id="preview-chip-danger">Wrong</span>
               </div>
             </div>
           </div>

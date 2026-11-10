@@ -93,6 +93,40 @@ varies lightness within one hue instead of moving the hue.
 Extra swatches are for fills and decoration. Their contrast against `bg` is
 shown next to each one, and low-contrast extras are marked as fill-only.
 
+## Palette size
+
+A size input in the rail sets how many colors the scheme holds, from 3 to 21.
+The count covers the role colors and the extra swatches together.
+
+When the palette is smaller than the nine roles, roles are dropped in a fixed
+priority order, so a tiny palette is a sensible palette rather than a random
+subset:
+
+| Order | Role | Kept from |
+| --- | --- | --- |
+| 1 | `bg` | always |
+| 2 | `text` | always |
+| 3 | `accent` | always |
+| 4 | `surface` | size 4+ |
+| 5 | `accent-2` | size 5+ |
+| 6 | `accent-soft` | size 6+ |
+| 7 | `danger` | size 7+ |
+| 8 | `success` | size 8+ |
+| 9 | `warning` | size 9+ |
+
+`danger` outranks `success` and `warning` because a wrong-answer state is
+the one a small palette can least afford to lose.
+
+Above nine, the remaining slots become extra swatches: the harmony's own hues
+first, then further hues spaced by the golden angle (137.508°) from the base,
+skipping any hue within 10° of one already used. Monochromatic keeps its
+extras in the same hue and varies lightness instead.
+
+Roles that are not in the palette are absent, not blank: their swatch is not
+drawn, their contrast row is not listed, their `on-*` token is not exported,
+and the preview hides the element that used them. An `Auto` button returns to
+the harmony's natural size.
+
 ## Light and dark
 
 - The toggle recomputes `bg`, `surface`, and `text` only. Both accents stay
