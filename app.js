@@ -213,8 +213,8 @@
     els.sizeMinus.disabled = count <= C.SIZE_MIN;
     els.sizePlus.disabled = count >= C.SIZE_MAX;
     els.sizeSummary.textContent = extras
-      ? count + ' colors — ' + palette.roles.length + ' roles, ' + extras + (extras === 1 ? ' extra' : ' extras')
-      : count + ' colors — ' + palette.roles.length + ' roles';
+      ? palette.roles.length + ' roles + ' + extras + (extras === 1 ? ' extra' : ' extras')
+      : palette.roles.length + (palette.roles.length === 1 ? ' role' : ' roles');
     els.sizeAuto.hidden = state.size === null;
   }
 

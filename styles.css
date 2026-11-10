@@ -345,15 +345,23 @@ input {
 
 /* ---------- Palette size ---------- */
 
-.size-control {
-  display: grid;
-  grid-template-columns: 32px 1fr 32px;
+.size-row {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.size-control {
+  display: inline-grid;
+  grid-template-columns: 30px 58px 30px;
+  align-items: center;
+  gap: 6px;
 }
 
 .stepper {
-  width: 32px;
+  width: 30px;
   height: 30px;
   border: 1px solid var(--line-strong);
   border-radius: 6px;
@@ -376,22 +384,23 @@ input {
 
 #size-input {
   width: 100%;
-  padding: 5px 7px;
+  padding: 5px 4px;
   border: 1px solid var(--line-strong);
   border-radius: 6px;
   background: var(--soft);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
-  text-align: right;
+  text-align: center;
 }
 
 .size-hint {
-  margin-top: 8px;
+  margin: 0;
   font-size: 11px;
   color: var(--muted);
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
 }
 
 .link-btn {
