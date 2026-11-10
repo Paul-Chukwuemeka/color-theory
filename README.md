@@ -19,12 +19,15 @@ No install, no build step, no dependencies.
 ## Test
 
 ```bash
-node --test tests/color.test.js tests/palette.test.js
+node --test tests/color.test.js tests/palette.test.js tests/app-types.test.js
 ```
 
 ## What it does
 
 - Twelve preset brand colors plus a custom hex field.
+- Seven app types: general, dashboard, education, kids, fintech, health,
+  developer. A type shapes the neutrals, the accents, the semantic colors, the
+  text contrast floor, and the harmony and theme the scheme opens in.
 - Six harmony rules: analogous, complementary, split-complementary, triadic,
   tetradic, monochromatic.
 - A draggable hue ring and a hue slider.
