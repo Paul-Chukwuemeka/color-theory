@@ -20,6 +20,7 @@
 
   var state = {
     hex: '#6366F1',
+    appType: 'general',
     harmonyId: 'analogous',
     mode: 'light',
     exportFormat: 'hex',
@@ -33,6 +34,7 @@
     hexInput: document.getElementById('hex-input'),
     hexError: document.getElementById('hex-error'),
     presetGrid: document.getElementById('preset-grid'),
+    appTypeList: document.getElementById('app-type-list'),
     harmonyList: document.getElementById('harmony-list'),
     sizeInput: document.getElementById('size-input'),
     sizeMinus: document.getElementById('size-minus'),
@@ -75,10 +77,10 @@
 
   function derive() {
     palettes.light = C.buildPalette({
-      hex: state.hex, harmonyId: state.harmonyId, mode: 'light', size: state.size
+      hex: state.hex, harmonyId: state.harmonyId, mode: 'light', size: state.size, appType: state.appType
     });
     palettes.dark = C.buildPalette({
-      hex: state.hex, harmonyId: state.harmonyId, mode: 'dark', size: state.size
+      hex: state.hex, harmonyId: state.harmonyId, mode: 'dark', size: state.size, appType: state.appType
     });
   }
 
@@ -92,6 +94,14 @@
 
   function setHarmony(id) {
     state.harmonyId = id;
+    render();
+  }
+
+  function setAppType(id) {
+    var type = C.appTypeById(id);
+    state.appType = type.id;
+    state.harmonyId = type.harmonyId;
+    state.mode = type.mode;
     render();
   }
 
@@ -148,6 +158,21 @@
     });
   }
 
+  function buildAppTypes() {
+    C.APP_TYPES.forEach(function (type) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'chip';
+      button.dataset.appType = type.id;
+      button.textContent = type.label;
+      button.setAttribute('aria-label', type.label + ' app type');
+      button.addEventListener('click', function () {
+        setAppType(type.id);
+      });
+      els.appTypeList.appendChild(button);
+    });
+  }
+
   /* ---------- Rendering ---------- */
 
   function render(options) {
@@ -166,6 +191,7 @@
     }
 
     renderPresetState();
+    renderAppTypeState();
     renderHarmonyState();
     renderSizeControl(palette);
     renderSwatches(palette);
@@ -188,6 +214,14 @@
   function renderHarmonyState() {
     Array.prototype.forEach.call(els.harmonyList.children, function (button) {
       button.setAttribute('aria-pressed', button.dataset.harmony === state.harmonyId ? 'true' : 'false');
+    });
+  }
+
+  function renderAppTypeState() {
+    Array.prototype.forEach.call(els.appTypeList.children, function (button) {
+      var active = button.dataset.appType === state.appType;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
   }
 
@@ -370,7 +404,8 @@
       var mini = C.buildPalette({
         hex: suggestion.hex,
         harmonyId: suggestion.harmonyId,
-        mode: state.mode
+        mode: state.mode,
+        appType: state.appType
       });
 
       var button = document.createElement('button');
@@ -641,6 +676,7 @@
     });
   }
 
+  buildAppTypes();
   buildPresets();
   buildHarmonies();
   wireInputs();

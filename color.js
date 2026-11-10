@@ -151,6 +151,191 @@
     { key: 'danger', prop: 'danger', priority: 7 }
   ];
 
+  var APP_TYPES = [
+    {
+      id: 'general',
+      label: 'General',
+      neutralHue: 'base',
+      neutralSat: [0.24, 0.26],
+      neutralBgL: [0.985, 0.075],
+      neutralSurfaceL: [0.955, 0.115],
+      accentSat: 1,
+      accentSatMax: 1,
+      accentSatMin: 0,
+      accentLight: 0,
+      accent2Sat: 1,
+      accent2SatMax: 1,
+      accent2SatMin: 0,
+      accent2Light: 0,
+      accent2Hue: 'partner',
+      accentSoftMix: [0.16, 0.30],
+      textRatio: 4.5,
+      semantics: {
+        light: { success: '#15803D', warning: '#B45309', danger: '#B91C1C' },
+        dark: { success: '#4ADE80', warning: '#FBBF24', danger: '#F87171' }
+      },
+      harmonyId: 'analogous',
+      mode: 'light'
+    },
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      neutralHue: 220,
+      neutralSat: [0.16, 0.18],
+      neutralBgL: [0.975, 0.09],
+      neutralSurfaceL: [0.935, 0.14],
+      accentSat: 0.9,
+      accentSatMax: 0.9,
+      accentSatMin: 0,
+      accentLight: -0.02,
+      accent2Sat: 0.85,
+      accent2SatMax: 0.85,
+      accent2SatMin: 0,
+      accent2Light: 0.04,
+      accent2Hue: 'warm',
+      accentSoftMix: [0.14, 0.26],
+      textRatio: 4.5,
+      semantics: {
+        light: { success: '#16A34A', warning: '#D97706', danger: '#DC2626' },
+        dark: { success: '#4ADE80', warning: '#FBBF24', danger: '#F87171' }
+      },
+      harmonyId: 'split-complementary',
+      mode: 'dark'
+    },
+    {
+      id: 'education',
+      label: 'Education',
+      neutralHue: 35,
+      neutralSat: [0.22, 0.20],
+      neutralBgL: [0.985, 0.08],
+      neutralSurfaceL: [0.955, 0.125],
+      accentSat: 1,
+      accentSatMax: 1,
+      accentSatMin: 0,
+      accentLight: 0.02,
+      accent2Sat: 1,
+      accent2SatMax: 1,
+      accent2SatMin: 0,
+      accent2Light: 0.02,
+      accent2Hue: 'partner',
+      accentSoftMix: [0.20, 0.32],
+      textRatio: 4.5,
+      semantics: {
+        light: { success: '#16A34A', warning: '#D97706', danger: '#DC2626' },
+        dark: { success: '#4ADE80', warning: '#FBBF24', danger: '#F87171' }
+      },
+      harmonyId: 'triadic',
+      mode: 'light'
+    },
+    {
+      id: 'kids',
+      label: 'Kids',
+      neutralHue: 45,
+      neutralSat: [0.28, 0.24],
+      neutralBgL: [0.99, 0.10],
+      neutralSurfaceL: [0.965, 0.15],
+      accentSat: 1,
+      accentSatMax: 1,
+      accentSatMin: 0.68,
+      accentLight: 0.02,
+      accent2Sat: 1,
+      accent2SatMax: 1,
+      accent2SatMin: 0.6,
+      accent2Light: 0.02,
+      accent2Hue: 'partner',
+      accentSoftMix: [0.24, 0.36],
+      textRatio: 7,
+      semantics: {
+        light: { success: '#22C55E', warning: '#EA580C', danger: '#EF4444' },
+        dark: { success: '#86EFAC', warning: '#FDBA74', danger: '#FCA5A5' }
+      },
+      harmonyId: 'analogous',
+      mode: 'light'
+    },
+    {
+      id: 'fintech',
+      label: 'Fintech',
+      neutralHue: 215,
+      neutralSat: [0.14, 0.16],
+      neutralBgL: [0.98, 0.08],
+      neutralSurfaceL: [0.95, 0.12],
+      accentSat: 0.85,
+      accentSatMax: 0.55,
+      accentSatMin: 0,
+      accentLight: 0.02,
+      accent2Sat: 0.85,
+      accent2SatMax: 0.85,
+      accent2SatMin: 0,
+      accent2Light: 0.02,
+      accent2Hue: 'partner',
+      accentSoftMix: [0.14, 0.26],
+      textRatio: 4.5,
+      semantics: {
+        light: { success: '#047857', warning: '#B45309', danger: '#B91C1C' },
+        dark: { success: '#34D399', warning: '#FBBF24', danger: '#F87171' }
+      },
+      harmonyId: 'complementary',
+      mode: 'light'
+    },
+    {
+      id: 'health',
+      label: 'Health',
+      neutralHue: 30,
+      neutralSat: [0.14, 0.12],
+      neutralBgL: [0.985, 0.085],
+      neutralSurfaceL: [0.955, 0.12],
+      accentSat: 0.8,
+      accentSatMax: 0.6,
+      accentSatMin: 0,
+      accentLight: 0.04,
+      accent2Sat: 0.8,
+      accent2SatMax: 0.8,
+      accent2SatMin: 0,
+      accent2Light: 0.04,
+      accent2Hue: 'partner',
+      accentSoftMix: [0.14, 0.26],
+      textRatio: 4.5,
+      semantics: {
+        light: { success: '#4D7C0F', warning: '#B45309', danger: '#C2410C' },
+        dark: { success: '#A3E635', warning: '#FDE047', danger: '#FDBA74' }
+      },
+      harmonyId: 'split-complementary',
+      mode: 'light'
+    },
+    {
+      id: 'developer',
+      label: 'Developer',
+      neutralHue: 220,
+      neutralSat: [0.16, 0.20],
+      neutralBgL: [0.97, 0.085],
+      neutralSurfaceL: [0.94, 0.13],
+      accentSat: 1,
+      accentSatMax: 0.95,
+      accentSatMin: 0,
+      accentLight: 0,
+      accent2Sat: 1,
+      accent2SatMax: 1,
+      accent2SatMin: 0,
+      accent2Light: 0,
+      accent2Hue: 'partner',
+      accentSoftMix: [0.16, 0.30],
+      textRatio: 4.5,
+      semantics: {
+        light: { success: '#15803D', warning: '#A16207', danger: '#DC2626' },
+        dark: { success: '#4ADE80', warning: '#FACC15', danger: '#F87171' }
+      },
+      harmonyId: 'tetradic',
+      mode: 'dark'
+    }
+  ];
+
+  function appTypeById(id) {
+    for (var i = 0; i < APP_TYPES.length; i++) {
+      if (APP_TYPES[i].id === id) return APP_TYPES[i];
+    }
+    return APP_TYPES[0];
+  }
+
   function hueGap(a, b) {
     var diff = Math.abs(a - b) % 360;
     return Math.min(diff, 360 - diff);
@@ -192,7 +377,7 @@
     });
   }
 
-  function monoExtras(baseHue, s, l, count) {
+  function monoExtras(baseHue, s, l, count, type) {
     var out = [];
     var i = 1;
     while (out.length < count && i < 30) {
@@ -201,16 +386,19 @@
       var nextL = l + sign * offset;
       if (nextL > 0.95 || nextL < 0.08) nextL = l - sign * offset;
       var nextS = Math.max(0, s - 0.04 * (offset / 0.14));
+      // The saturation already carries the type's shaping; only the floor and
+      // the ceiling are applied here, so the rule is not applied twice.
+      if (type) nextS = Math.min(Math.max(nextS, type.accentSatMin), type.accentSatMax);
       out.push(rgbToHex(hslToRgb({ h: baseHue, s: nextS, l: nextL })));
       i++;
     }
     return out;
   }
 
-  function generateExtras(baseHue, harmonyId, count, s, l) {
+  function generateExtras(baseHue, harmonyId, count, s, l, type) {
     if (count <= 0) return [];
     if (harmonyById(harmonyId).partner === null) {
-      return monoExtras(baseHue, s, l, count);
+      return monoExtras(baseHue, s, l, count, type);
     }
     var taken = [baseHue];
     var partner = partnerHue(baseHue, harmonyId);
@@ -241,7 +429,8 @@
     return { key: key, label: label, fg: fg, bg: bg, ratio: ratio, level: contrastLevel(ratio) };
   }
 
-  function deriveText(h, mode, bg, surface) {
+  function deriveText(h, mode, bg, surface, minRatio) {
+    var floor = minRatio || 4.5;
     var lightMode = mode === 'light';
     var lightness = lightMode ? 0.12 : 0.96;
     var step = lightMode ? -0.02 : 0.02;
@@ -250,7 +439,7 @@
 
     for (var i = 0; i < 60; i++) {
       candidate = rgbToHex(hslToRgb({ h: h, s: sat, l: lightness }));
-      if (contrastRatio(candidate, bg) >= 4.5 && contrastRatio(candidate, surface) >= 4.5) {
+      if (contrastRatio(candidate, bg) >= floor && contrastRatio(candidate, surface) >= floor) {
         return candidate;
       }
       lightness += step;
@@ -260,24 +449,65 @@
     return lightMode ? '#000000' : '#FFFFFF';
   }
 
+  function shapeSaturation(sat, type, family) {
+    var multiplier = family === 'accent2' ? type.accent2Sat : type.accentSat;
+    var max = family === 'accent2' ? type.accent2SatMax : type.accentSatMax;
+    var min = family === 'accent2' ? type.accent2SatMin : type.accentSatMin;
+    var out = clamp(sat * multiplier, 0, 1);
+    out = Math.min(out, max);
+    out = Math.max(out, min);
+    return out;
+  }
+
+  function shapesAccent(type, family) {
+    if (family === 'accent2') {
+      return type.accent2Sat !== 1 || type.accent2Light !== 0 ||
+        type.accent2SatMax !== 1 || type.accent2SatMin !== 0;
+    }
+    return type.accentSat !== 1 || type.accentLight !== 0 ||
+      type.accentSatMax !== 1 || type.accentSatMin !== 0;
+  }
+
+  function buildAccent2(hueValue, s, l, type) {
+    if (!shapesAccent(type, 'accent2')) {
+      return rgbToHex(hslToRgb({ h: hueValue, s: s, l: l }));
+    }
+    // Shape in HSL space and keep the intended hue. Reading the hue back out
+    // of the raw colour would lose it whenever the base is achromatic, where
+    // the raw colour is a grey and every hue reads as 0.
+    var a2Sat = shapeSaturation(s, type, 'accent2');
+    var a2L = clamp(l + type.accent2Light, 0.05, 0.95);
+    return rgbToHex(hslToRgb({ h: hueValue, s: a2Sat, l: a2L }));
+  }
+
   function buildPalette(opts) {
     var accent = normalizeHex(opts.hex);
     if (!accent) throw new Error('Invalid hex: ' + opts.hex);
 
     var mode = opts.mode === 'dark' ? 'dark' : 'light';
     var light = mode === 'light';
+    var idx = light ? 0 : 1;
     var hsl = rgbToHsl(hexToRgb(accent));
     var h = hsl.h;
     var s = hsl.s;
     var l = hsl.l;
 
-    var bg = rgbToHex(hslToRgb(light
-      ? { h: h, s: 0.24, l: 0.985 }
-      : { h: h, s: 0.26, l: 0.075 }));
-    var surface = rgbToHex(hslToRgb(light
-      ? { h: h, s: 0.22, l: 0.955 }
-      : { h: h, s: 0.24, l: 0.115 }));
-    var text = deriveText(h, mode, bg, surface);
+    var type = appTypeById(opts.appType);
+    var neutralHue = type.neutralHue === 'base' ? h : type.neutralHue;
+
+    var bg = rgbToHex(hslToRgb({
+      h: neutralHue, s: type.neutralSat[idx], l: type.neutralBgL[idx]
+    }));
+    var surface = rgbToHex(hslToRgb({
+      h: neutralHue, s: type.neutralSat[idx] - 0.02, l: type.neutralSurfaceL[idx]
+    }));
+    var text = deriveText(neutralHue, mode, bg, surface, type.textRatio);
+
+    var accentSat = shapeSaturation(s, type, 'accent');
+    var accentL = clamp(l + type.accentLight, 0.05, 0.95);
+    var accentFinal = shapesAccent(type, 'accent')
+      ? rgbToHex(hslToRgb({ h: h, s: accentSat, l: accentL }))
+      : accent;
 
     var rule = harmonyById(opts.harmonyId);
     var accent2;
@@ -286,18 +516,21 @@
         h: h, s: s * 0.55, l: Math.min(l + 0.22, 0.95)
       }));
     } else {
-      accent2 = rgbToHex(hslToRgb({ h: wrapHue(h + rule.partner), s: s, l: l }));
+      var accent2HueValue = wrapHue(h + rule.partner);
+      if (type.accent2Hue === 'warm' && hueGap(35, h) >= 60) {
+        accent2HueValue = 35;
+      }
+      accent2 = buildAccent2(accent2HueValue, s, l, type);
     }
 
+    var extraSat = shapeSaturation(s, type, 'accent');
     var extras = rule.extras.map(function (d) {
-      return rgbToHex(hslToRgb({ h: wrapHue(h + d), s: s, l: l }));
+      return rgbToHex(hslToRgb({ h: wrapHue(h + d), s: extraSat, l: l }));
     });
 
-    var accentSoft = mix(bg, accent, light ? 0.16 : 0.30);
+    var accentSoft = mix(bg, accentFinal, type.accentSoftMix[idx]);
 
-    var semantic = light
-      ? { success: '#15803D', warning: '#B45309', danger: '#B91C1C' }
-      : { success: '#4ADE80', warning: '#FBBF24', danger: '#F87171' };
+    var semantic = type.semantics[mode];
 
     var size = normalizeSize(opts.size);
     var keptDefs;
@@ -307,7 +540,7 @@
       keptDefs = ROLE_DEFS.slice()
         .sort(function (a, b) { return a.priority - b.priority; })
         .slice(0, Math.min(size, ROLE_DEFS.length));
-      extras = generateExtras(h, rule.id, size - keptDefs.length, s, l);
+      extras = generateExtras(h, rule.id, size - keptDefs.length, extraSat, l, type);
     }
 
     var kept = {};
@@ -317,7 +550,7 @@
       bg: bg,
       surface: surface,
       text: text,
-      accent: accent,
+      accent: accentFinal,
       accent2: accent2,
       accentSoft: accentSoft,
       success: semantic.success,
@@ -490,6 +723,8 @@
     formatExport: formatExport,
     normalizeSize: normalizeSize,
     SIZE_MIN: SIZE_MIN,
-    SIZE_MAX: SIZE_MAX
+    SIZE_MAX: SIZE_MAX,
+    APP_TYPES: APP_TYPES,
+    appTypeById: appTypeById
   };
 });
