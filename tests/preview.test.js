@@ -1,17 +1,49 @@
 const test = require('node:test');
 const assert = require('node:assert');
+const fs = require('node:fs');
+const path = require('node:path');
 const C = require('../color.js');
 const Preview = require('../preview.js');
 
+const CSS = fs.readFileSync(path.join(__dirname, '..', 'styles.css'), 'utf8');
+
 const FILL_ROLES = ['surface', 'accent', 'accent2', 'accentSoft', 'success', 'warning', 'danger'];
-const KNOWN_ROLES = ['bg', 'surface', 'text', 'accent', 'accent2', 'accentSoft', 'success', 'warning', 'danger'];
+
+const ROLE_VARS = {
+  surface: '--pv-surface',
+  accent: '--pv-accent',
+  accent2: '--pv-accent2',
+  accentSoft: '--pv-accent-soft',
+  success: '--pv-success',
+  warning: '--pv-warning',
+  danger: '--pv-danger'
+};
+
+const PALETTE_KEYS = Object.keys(C.buildPalette({
+  hex: '#6366F1', harmonyId: 'analogous', mode: 'light'
+}));
+
+function attributesIn(markup) {
+  const roles = new Set();
+  const texts = new Set();
+  let match;
+  const roleRe = /data-role="([^"]+)"/g;
+  while ((match = roleRe.exec(markup)) !== null) roles.add(match[1]);
+  const textRe = /data-text="([^"]+)"/g;
+  while ((match = textRe.exec(markup)) !== null) texts.add(match[1]);
+  return { roles, texts };
+}
+
+function rulesFor(kind, role) {
+  const bodies = [];
+  const re = new RegExp('\\[data-' + kind + '="' + role + '"\\][^{]*\\{([^}]*)\\}', 'g');
+  let match;
+  while ((match = re.exec(CSS)) !== null) bodies.push(match[1]);
+  return bodies;
+}
 
 function rolesIn(markup) {
-  const found = new Set();
-  const re = /data-role="([^"]+)"/g;
-  let match;
-  while ((match = re.exec(markup)) !== null) found.add(match[1]);
-  return found;
+  return attributesIn(markup).roles;
 }
 
 test('every app type has a preview mockup', () => {
@@ -23,17 +55,47 @@ test('every app type has a preview mockup', () => {
 
 test('every mockup paints every fill role', () => {
   for (const id of Preview.ids) {
-    const roles = rolesIn(Preview.markup(id));
+    const { roles, texts } = attributesIn(Preview.markup(id));
+    const used = new Set([...roles, ...texts]);
     for (const role of FILL_ROLES) {
-      assert.ok(roles.has(role), `${id} mockup never uses ${role}`);
+      assert.ok(used.has(role), `${id} mockup never uses ${role}`);
     }
   }
 });
 
 test('mockups only ask for roles the palette has', () => {
   for (const id of Preview.ids) {
-    for (const role of rolesIn(Preview.markup(id))) {
-      assert.ok(KNOWN_ROLES.includes(role), `${id} asks for unknown role ${role}`);
+    const { roles, texts } = attributesIn(Preview.markup(id));
+    for (const role of new Set([...roles, ...texts])) {
+      assert.ok(PALETTE_KEYS.includes(role), `${id} asks for unknown role ${role}`);
+    }
+  }
+});
+
+test('every role a mockup asks for is painted from the palette', () => {
+  for (const id of Preview.ids) {
+    const { roles, texts } = attributesIn(Preview.markup(id));
+
+    for (const role of roles) {
+      const bodies = rulesFor('role', role);
+      assert.ok(bodies.length > 0, `${id}: no css rule paints [data-role="${role}"]`);
+      assert.ok(
+        bodies.some((body) => body.includes('var(' + ROLE_VARS[role] + ')')),
+        `${id}: [data-role="${role}"] is not painted with ${ROLE_VARS[role]}`
+      );
+      assert.ok(
+        bodies.some((body) => /var\(--pv-on-/.test(body)),
+        `${id}: [data-role="${role}"] has no measured label colour`
+      );
+    }
+
+    for (const role of texts) {
+      const bodies = rulesFor('text', role);
+      assert.ok(bodies.length > 0, `${id}: no css rule paints [data-text="${role}"]`);
+      assert.ok(
+        bodies.some((body) => body.includes('var(' + ROLE_VARS[role] + ')')),
+        `${id}: [data-text="${role}"] is not painted with ${ROLE_VARS[role]}`
+      );
     }
   }
 });

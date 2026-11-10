@@ -629,6 +629,7 @@ input {
   --pv-accent2: #a763f1;
   --pv-accent-soft: #a5b4fc;
   --pv-on-accent: #ffffff;
+  --pv-on-accent2: #ffffff;
   --pv-on-soft: #0f172a;
   --pv-on-surface: #0f172a;
   --pv-success: #15803d;
@@ -643,6 +644,76 @@ input {
   border-radius: 10px;
   padding: 26px;
   min-height: 320px;
+}
+
+/* The role decides the paint. A class only decides the shape, so a mockup
+   can never ask for one colour and be painted with another. */
+.mock [data-role="surface"] {
+  background: var(--pv-surface);
+  color: var(--pv-on-surface);
+}
+
+.mock [data-role="accent"] {
+  background: var(--pv-accent);
+  color: var(--pv-on-accent);
+}
+
+.mock [data-role="accent2"] {
+  background: var(--pv-accent2);
+  color: var(--pv-on-accent2);
+}
+
+.mock [data-role="accentSoft"] {
+  background: var(--pv-accent-soft);
+  color: var(--pv-on-soft);
+}
+
+.mock [data-role="success"] {
+  background: var(--pv-success);
+  color: var(--pv-on-success);
+}
+
+.mock [data-role="warning"] {
+  background: var(--pv-warning);
+  color: var(--pv-on-warning);
+}
+
+.mock [data-role="danger"] {
+  background: var(--pv-danger);
+  color: var(--pv-on-danger);
+}
+
+.mock [data-text="accent"] {
+  color: var(--pv-accent);
+}
+
+.mock [data-text="accent2"] {
+  color: var(--pv-accent2);
+}
+
+.mock [data-text="accentSoft"] {
+  color: var(--pv-accent-soft);
+}
+
+.mock [data-text="success"] {
+  color: var(--pv-success);
+}
+
+.mock [data-text="warning"] {
+  color: var(--pv-warning);
+}
+
+.mock [data-text="danger"] {
+  color: var(--pv-danger);
+}
+
+/* A chip painted with the surface tone sits on a card of the same tone, so it
+   needs an edge to be seen at all. */
+.mock-shape[data-role="surface"],
+.mock-pill[data-role="surface"],
+.mock-badge[data-role="surface"],
+.mock-dot[data-role="surface"] {
+  border: 1px solid var(--pv-line);
 }
 
 .mock {
@@ -670,7 +741,6 @@ input {
   width: 24px;
   height: 24px;
   border-radius: 7px;
-  background: var(--pv-accent);
 }
 
 .mock-wordmark {
@@ -697,7 +767,6 @@ input {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--pv-accent2);
 }
 
 .mock-eyebrow {
@@ -706,7 +775,7 @@ input {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  opacity: 0.72;
+  opacity: 0.75;
   margin-bottom: 8px;
 }
 
@@ -720,7 +789,7 @@ input {
 
 .mock-text {
   font-size: 13px;
-  opacity: 0.78;
+  opacity: 0.8;
   max-width: 40ch;
 }
 
@@ -737,13 +806,6 @@ input {
   padding: 9px 16px;
   font-size: 12px;
   font-weight: 600;
-  background: var(--pv-accent);
-  color: var(--pv-on-accent);
-}
-
-.mock-button.is-soft {
-  background: var(--pv-accent-soft);
-  color: var(--pv-on-soft);
 }
 
 .mock-tags {
@@ -757,17 +819,11 @@ input {
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 99px;
-  background: var(--pv-accent-soft);
-  color: var(--pv-on-soft);
-}
-
-.mock-tag.is-surface {
-  background: var(--pv-surface);
-  color: var(--pv-on-surface);
 }
 
 .mock-panel {
   background: var(--pv-surface);
+  border: 1px solid var(--pv-line);
   border-radius: 10px;
   padding: 18px;
 }
@@ -790,8 +846,6 @@ input {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
-  background: var(--pv-accent-soft);
-  color: var(--pv-on-soft);
 }
 
 .mock-bars {
@@ -805,12 +859,10 @@ input {
 .mock-bars i {
   flex: 1;
   border-radius: 4px 4px 2px 2px;
-  background: var(--pv-accent);
   opacity: 0.9;
 }
 
 .mock-bars i.is-alt {
-  background: var(--pv-accent2);
   opacity: 1;
 }
 
@@ -831,7 +883,7 @@ input {
 
 .mock-stats span {
   font-size: 10px;
-  opacity: 0.62;
+  opacity: 0.72;
 }
 
 .mock-states {
@@ -848,21 +900,6 @@ input {
   border-radius: 99px;
 }
 
-.mock-state.is-success {
-  background: var(--pv-success);
-  color: var(--pv-on-success);
-}
-
-.mock-state.is-warning {
-  background: var(--pv-warning);
-  color: var(--pv-on-warning);
-}
-
-.mock-state.is-danger {
-  background: var(--pv-danger);
-  color: var(--pv-on-danger);
-}
-
 .mock-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
@@ -875,7 +912,7 @@ input {
   min-width: 0;
 }
 
-/* A mock is a column, so a lone button or pill would stretch across it. */
+/* A mock is a column, so a lone button or chip would stretch across it. */
 .mock > .mock-button,
 .mock > .mock-pill,
 .mock > .mock-badge {
@@ -890,6 +927,7 @@ input {
 
 .mock-kpi {
   background: var(--pv-surface);
+  border: 1px solid var(--pv-line);
   border-radius: 10px;
   padding: 14px;
   display: flex;
@@ -903,7 +941,7 @@ input {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.6;
+  opacity: 0.78;
 }
 
 .mock-kpi-value {
@@ -919,23 +957,9 @@ input {
   border-radius: 99px;
 }
 
-.mock-delta.is-success {
-  background: var(--pv-success);
-  color: var(--pv-on-success);
-}
-
-.mock-delta.is-warning {
-  background: var(--pv-warning);
-  color: var(--pv-on-warning);
-}
-
-.mock-delta.is-danger {
-  background: var(--pv-danger);
-  color: var(--pv-on-danger);
-}
-
 .mock-rows {
   background: var(--pv-surface);
+  border: 1px solid var(--pv-line);
   border-radius: 10px;
   padding: 4px 14px;
 }
@@ -955,7 +979,7 @@ input {
 }
 
 .mock-row-value {
-  opacity: 0.7;
+  opacity: 0.78;
   font-variant-numeric: tabular-nums;
 }
 
@@ -964,35 +988,11 @@ input {
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 99px;
-  background: var(--pv-accent-soft);
-  color: var(--pv-on-soft);
   white-space: nowrap;
 }
 
-.mock-pill.is-success {
-  background: var(--pv-success);
-  color: var(--pv-on-success);
-}
-
-.mock-pill.is-warning {
-  background: var(--pv-warning);
-  color: var(--pv-on-warning);
-}
-
-.mock-pill.is-danger {
-  background: var(--pv-danger);
-  color: var(--pv-on-danger);
-}
-
-.mock-pill.is-alt {
-  background: var(--pv-accent2);
-  color: var(--pv-on-accent);
-}
-
-.mock-education .mock-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.mock-pill.is-active {
+  border-color: transparent;
 }
 
 .mock-pills {
@@ -1008,15 +1008,12 @@ input {
 }
 
 .mock-pills .mock-pill.is-active {
-  background: var(--pv-accent);
-  color: var(--pv-on-accent);
   border-color: transparent;
 }
 
 .mock-track {
   height: 8px;
   border-radius: 99px;
-  background: var(--pv-accent-soft);
   overflow: hidden;
 }
 
@@ -1025,7 +1022,6 @@ input {
   height: 100%;
   width: 62%;
   border-radius: 99px;
-  background: var(--pv-accent);
 }
 
 .mock-answers {
@@ -1045,24 +1041,6 @@ input {
   font-size: 12px;
 }
 
-.mock-answer.is-correct {
-  background: var(--pv-success);
-  color: var(--pv-on-success);
-  border-color: transparent;
-}
-
-.mock-answer.is-wrong {
-  background: var(--pv-danger);
-  color: var(--pv-on-danger);
-  border-color: transparent;
-}
-
-.mock-answer-tag {
-  font-size: 10px;
-  font-weight: 600;
-  opacity: 0.85;
-}
-
 .mock-kids {
   align-items: flex-start;
 }
@@ -1071,7 +1049,6 @@ input {
   width: 54px;
   height: 54px;
   border-radius: 22px 28px 20px 26px;
-  background: var(--pv-accent-soft);
 }
 
 .mock-stars {
@@ -1079,8 +1056,6 @@ input {
   font-weight: 700;
   padding: 5px 11px;
   border-radius: 99px;
-  background: var(--pv-warning);
-  color: var(--pv-on-warning);
 }
 
 .mock-shapes {
@@ -1089,6 +1064,7 @@ input {
   padding: 16px;
   border-radius: 14px;
   background: var(--pv-surface);
+  border: 1px solid var(--pv-line);
 }
 
 .mock-shape {
@@ -1099,18 +1075,6 @@ input {
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  background: var(--pv-accent);
-  color: var(--pv-on-accent);
-}
-
-.mock-shape.is-alt {
-  background: var(--pv-accent2);
-  color: var(--pv-on-accent);
-}
-
-.mock-shape.is-soft {
-  background: var(--pv-accent-soft);
-  color: var(--pv-on-soft);
 }
 
 .mock-button.is-big {
@@ -1127,8 +1091,6 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--pv-accent2);
-  color: var(--pv-on-accent);
 }
 
 .mock-dots {
@@ -1140,24 +1102,12 @@ input {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--pv-surface);
-}
-
-.mock-dot.is-done {
-  background: var(--pv-success);
-}
-
-.mock-dot.is-warn {
-  background: var(--pv-warning);
-}
-
-.mock-dot.is-bad {
-  background: var(--pv-danger);
 }
 
 .mock-balance {
   position: relative;
   background: var(--pv-surface);
+  border: 1px solid var(--pv-line);
   border-radius: 14px;
   padding: 20px;
   display: flex;
@@ -1180,7 +1130,6 @@ input {
   width: 54px;
   height: 34px;
   border-radius: 8px;
-  background: var(--pv-accent2);
   opacity: 0.9;
 }
 
@@ -1193,7 +1142,6 @@ input {
 .mock-range {
   height: 10px;
   border-radius: 99px;
-  background: var(--pv-accent-soft);
   overflow: hidden;
 }
 
@@ -1202,35 +1150,38 @@ input {
   height: 100%;
   width: 44%;
   border-radius: 99px;
-  background: var(--pv-accent);
+}
+
+.mock-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .mock-note {
   font-size: 11px;
   padding: 9px 11px;
   border-radius: 8px;
+  border: 1px solid var(--pv-line);
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-.mock-note.is-warning {
-  background: var(--pv-warning);
-  color: var(--pv-on-warning);
+.mock-note-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
 }
 
-.mock-note.is-danger {
-  background: var(--pv-danger);
-  color: var(--pv-on-danger);
-}
-
-.mock-developer .mock-head {
-  justify-content: flex-start;
-}
-
-.mock-dots {
+.mock-window-dots {
   display: flex;
   gap: 6px;
 }
 
-.mock-dots i {
+.mock-window-dots i {
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -1243,15 +1194,14 @@ input {
   font-size: 10px;
   padding: 3px 8px;
   border-radius: 6px;
-  background: var(--pv-accent-soft);
-  color: var(--pv-on-soft);
 }
 
 .mock-code {
   margin: 0;
   padding: 16px;
   border-radius: 10px;
-  background: var(--pv-surface);
+  background: var(--pv-bg);
+  border: 1px solid var(--pv-line);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11.5px;
   line-height: 1.9;
@@ -1263,24 +1213,11 @@ input {
 }
 
 .c-dim {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
-.c-key {
-  color: var(--pv-accent2);
-  font-weight: 600;
-}
-
-.c-ok {
-  color: var(--pv-success);
-}
-
-.c-warn {
-  color: var(--pv-warning);
-}
-
-.c-err {
-  color: var(--pv-danger);
+.c-text {
+  color: var(--pv-text);
 }
 
 @media (max-width: 700px) {

@@ -369,6 +369,10 @@
     els.previewCard.style.setProperty('--pv-accent2', accent2);
     els.previewCard.style.setProperty('--pv-accent-soft', accentSoft);
     els.previewCard.style.setProperty('--pv-on-accent', C.pickReadable(palette.accent, '#FFFFFF'));
+    // Each label colour is measured against the fill it sits on. on-accent-2
+    // is the palette's own token for accent-2; on-soft and on-surface are
+    // measured against the soft tint and the surface respectively.
+    els.previewCard.style.setProperty('--pv-on-accent2', palette.onAccent2 || '#FFFFFF');
     els.previewCard.style.setProperty('--pv-on-soft', C.pickReadable(accentSoft, palette.text));
     els.previewCard.style.setProperty('--pv-on-surface', C.pickReadable(surface, palette.text));
     els.previewCard.style.setProperty('--pv-success', success);
@@ -382,9 +386,14 @@
 
     // A role that is not in the palette cannot be painted, so the element
     // that needed it steps out of the layout instead of showing nothing.
-    Array.prototype.forEach.call(els.previewCard.querySelectorAll('[data-role]'), function (element) {
-      element.hidden = !palette[element.dataset.role];
-    });
+    // Elements that carry words keep them: their colour sits in a child.
+    Array.prototype.forEach.call(
+      els.previewCard.querySelectorAll('[data-role], [data-text]'),
+      function (element) {
+        var role = element.dataset.role || element.dataset.text;
+        element.hidden = !palette[role];
+      }
+    );
   }
 
   function renderSuggestions(hsl) {

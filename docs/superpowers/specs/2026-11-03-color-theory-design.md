@@ -235,9 +235,21 @@ The mockup is markup only — every colour comes from the palette through CSS
 custom properties, so switching type or base colour repaints it without
 rebuilding it.
 
-Elements that need a role carry `data-role="<role>"`. When a role is not in
-the palette (a tiny palette, say) the element using it is hidden rather than
-left blank.
+The role decides the paint; a class only decides the shape. Two markers say
+how an element uses the palette:
+
+- `data-role="<role>"` — the element is painted with that role and is hidden
+  when the palette does not have it. For things that exist only to show a
+  colour: chips, dots, bars, badges.
+- `data-text="<role>"` — the element's text is painted with that role, and it
+  is hidden when the palette does not have it.
+
+Elements that carry words the mockup needs (an answer row, a caution) keep
+their words and hold their colour in a small child, so a missing role takes
+the colour away and never the text.
+
+Every fill is paired with a measured label colour: the palette's own `on-*`
+token for that fill, or the closest readable one.
 
 ## Light and dark
 
