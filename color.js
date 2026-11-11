@@ -848,10 +848,8 @@
     }).join('\n');
   }
 
-  function jsonBlock(palette, indent) {
-    var body = JSON.stringify(roleMap(palette), null, 2);
-    if (!indent) return body;
-    return body.split('\n').map(function (line) { return indent + line; }).join('\n');
+  function jsonBlock(palette) {
+    return JSON.stringify(roleMap(palette), null, 2);
   }
 
   function pickReadable(bgHex, preferredHex) {
