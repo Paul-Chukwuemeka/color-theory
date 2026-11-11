@@ -533,6 +533,36 @@ input {
   margin-top: 0;
 }
 
+/* Where the base color went. It is an input, not a role, so the palette
+   never shows it as itself. */
+.base-origin {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.base-origin-chip {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  flex: none;
+}
+
+.palette-origin {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.palette-origin:empty {
+  margin-top: 0;
+}
+
 .extra {
   min-height: 24px;
   display: inline-flex;

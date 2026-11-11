@@ -46,6 +46,9 @@ batching, and the accessibility floor.
 - Six harmony rules: analogous, complementary, split-complementary, triadic,
   tetradic, monochromatic.
 - A draggable hue ring and a hue slider.
+- The base color is an input, not a role: the accent keeps its hue while the
+  app type and the contrast floors reshape lightness and saturation, and the
+  palette panel names the exact hex the accent ended up as.
 - Ten color roles — `bg`, `surface`, `text`, `text-muted`, `accent`,
   `accent-2`, `accent-soft`, `success`, `warning`, `danger` — plus harmony
   extras and a matching `on-*` label color for every fill.

@@ -41,6 +41,9 @@
     hueValue: document.getElementById('hue-value'),
     swatchRow: document.getElementById('swatch-row'),
     extrasRow: document.getElementById('extras-row'),
+    paletteOrigin: document.getElementById('palette-origin'),
+    baseOriginChip: document.getElementById('base-origin-chip'),
+    baseOriginText: document.getElementById('base-origin-text'),
     contrastList: document.getElementById('contrast-list'),
     previewCard: document.getElementById('preview-card'),
     previewSummary: document.getElementById('preview-summary'),
@@ -202,6 +205,7 @@
     renderHarmonyState();
     renderSizeControl(palette);
     renderSwatches(palette);
+    renderBaseOrigin(palette);
     renderDial(hue);
     renderContrast(palette);
     renderPreview(palette);
@@ -339,6 +343,31 @@
     palette.extras.forEach(function (hex, index) {
       addMobileSwatch(hex, 'extra-' + (index + 1));
     });
+  }
+
+  // The base color is an input, not a role, so it never shows up in the
+  // palette as itself. Say where it went instead: the accent keeps the base
+  // hue, and the app type plus the contrast floors reshape the rest.
+  function renderBaseOrigin(palette) {
+    var base = currentHex().toUpperCase();
+    var accent = palette.accent ? palette.accent.toUpperCase() : null;
+    var typeLabel = C.appTypeById(state.appType).label.toLowerCase();
+
+    els.baseOriginChip.style.background = base;
+    els.baseOriginText.textContent = 'Base ' + base;
+
+    if (!accent) {
+      els.paletteOrigin.textContent = 'Base ' + base + ' has no accent in this palette size.';
+      return;
+    }
+    if (accent === base) {
+      els.paletteOrigin.textContent = 'Base ' + base + ' is the accent, unchanged.';
+      return;
+    }
+    var hue = Math.round(C.rgbToHsl(C.hexToRgb(base)).h);
+    els.paletteOrigin.textContent = 'Base ' + base + ' → accent ' + accent +
+      ': hue ' + hue + '° kept, lightness and saturation shaped for the ' +
+      typeLabel + ' type and its contrast floors.';
   }
 
   function renderDial(hue) {

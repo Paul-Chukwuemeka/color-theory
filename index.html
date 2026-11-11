@@ -12,12 +12,12 @@
   <meta property="og:description" content="Turn one color into a contrast-checked UI palette with accessible text pairs, seven app types and six harmonies.">
   <meta property="og:image" content="screenshot.png">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="styles.css?v=13">
-  <script src="color.js?v=13" defer></script>
-  <script src="state.js?v=13" defer></script>
-  <script src="schedule.js?v=13" defer></script>
-  <script src="preview.js?v=13" defer></script>
-  <script src="app.js?v=13" defer></script>
+  <link rel="stylesheet" href="styles.css?v=14">
+  <script src="color.js?v=14" defer></script>
+  <script src="state.js?v=14" defer></script>
+  <script src="schedule.js?v=14" defer></script>
+  <script src="preview.js?v=14" defer></script>
+  <script src="app.js?v=14" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -46,6 +46,10 @@
                spellcheck="false" autocomplete="off" aria-label="Hex color"
                aria-describedby="hex-error">
         <p id="hex-error" class="field-error" role="alert" hidden>Enter a 3- or 6-digit hex.</p>
+        <p class="base-origin">
+          <span class="base-origin-chip" id="base-origin-chip" aria-hidden="true"></span>
+          <span id="base-origin-text"></span>
+        </p>
         <div id="preset-grid" class="preset-grid" role="group" aria-label="Preset colors"></div>
       </section>
 
@@ -97,6 +101,7 @@
         </div>
         <div id="swatch-row" class="swatch-row"></div>
         <div id="extras-row" class="extras-row"></div>
+        <p id="palette-origin" class="palette-origin"></p>
       </section>
 
       <section class="panel">
