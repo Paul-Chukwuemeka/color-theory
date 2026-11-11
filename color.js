@@ -410,10 +410,14 @@
     });
   }
 
-  function monoExtras(baseHue, s, l, count, type) {
+  function monoExtras(baseHue, s, l, count, type, excludeHex) {
     var out = [];
     var seen = {};
-    var accentHex = rgbToHex(hslToRgb({ h: baseHue, s: s, l: l }));
+    // The accent can be shaped differently from the extras, so the caller
+    // supplies its actual hex: seeding with a recomputed colour let a
+    // same-lightness extra come out as the accent again.
+    var accentHex = excludeHex ||
+      rgbToHex(hslToRgb({ h: baseHue, s: s, l: l }));
     seen[accentHex] = true;
 
     // Lightness steps on both sides of the base, nearest first, so a small
@@ -450,10 +454,10 @@
     return out;
   }
 
-  function generateExtras(baseHue, harmonyId, count, s, l, type) {
+  function generateExtras(baseHue, harmonyId, count, s, l, type, accentHex) {
     if (count <= 0) return [];
     if (harmonyById(harmonyId).partner === null) {
-      return monoExtras(baseHue, s, l, count, type);
+      return monoExtras(baseHue, s, l, count, type, accentHex);
     }
     var taken = [baseHue];
     var partner = partnerHue(baseHue, harmonyId);
@@ -548,6 +552,28 @@
     return rgbToHex(hslToRgb({ h: hueValue, s: a2Sat, l: a2L }));
   }
 
+  // Eight-bit colour loses hue resolution in very dark or very light tones:
+  // a partner that is 60 degrees away by design can read as 52 degrees on
+  // screen. Step the intended hue outwards until the painted pair really is
+  // 60 degrees apart, keeping the first candidate that passes.
+  function buildSeparatedAccent2(accentHex, intendedHue, s, l, type, satScale) {
+    var accentHsl = rgbToHsl(hexToRgb(accentHex));
+    if (accentHsl.s < 0.1) {
+      return buildAccent2(intendedHue, s, l, type, satScale);
+    }
+    var best = null;
+    for (var step = 0; step <= 120; step++) {
+      var offsets = step === 0 ? [0] : [step, -step];
+      for (var i = 0; i < offsets.length; i++) {
+        var candidate = buildAccent2(wrapHue(intendedHue + offsets[i]), s, l, type, satScale);
+        var gap = hueGap(rgbToHsl(hexToRgb(candidate)).h, accentHsl.h);
+        if (best === null || gap > best.gap) best = { hex: candidate, gap: gap };
+        if (gap >= 60) return candidate;
+      }
+    }
+    return best.hex;
+  }
+
   // Keep a semantic colour distinguishable from the brand, and from the other
   // semantics, without dropping below the floor where it is used as text.
   function refineSemantic(hex, accentHue, allSemantics, bg, floor) {
@@ -619,7 +645,9 @@
       }
       // Analogous wants a near neighbour rather than a shout, so its second
       // accent is the same harmony at a lower saturation.
-      accent2 = buildAccent2(accent2HueValue, s, l, type, rule.id === 'analogous' ? 0.6 : 1);
+      accent2 = buildSeparatedAccent2(
+        accentFinal, accent2HueValue, s, l, type, rule.id === 'analogous' ? 0.6 : 1
+      );
     }
 
     var extraSat = shapeSaturation(s, type, 'accent');
@@ -648,7 +676,7 @@
       keptDefs = ROLE_DEFS.slice()
         .sort(function (a, b) { return a.priority - b.priority; })
         .slice(0, Math.min(size, ROLE_DEFS.length));
-      extras = generateExtras(h, rule.id, size - keptDefs.length, extraSat, extraL, type);
+      extras = generateExtras(h, rule.id, size - keptDefs.length, extraSat, extraL, type, accentFinal);
     }
 
     var kept = {};
