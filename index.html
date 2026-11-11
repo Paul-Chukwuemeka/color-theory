@@ -106,12 +106,15 @@
             <div id="export-format" class="segmented" role="group" aria-label="Export format">
               <button type="button" data-format="hex" class="is-active" aria-pressed="true">Hex</button>
               <button type="button" data-format="css" aria-pressed="false">CSS</button>
+              <button type="button" data-format="tailwind" aria-pressed="false">Tailwind</button>
+              <button type="button" data-format="json" aria-pressed="false">JSON</button>
             </div>
             <div id="export-themes" class="segmented" role="group" aria-label="Export themes">
               <button type="button" data-themes="light" class="is-active" aria-pressed="true">Light</button>
               <button type="button" data-themes="dark" aria-pressed="false">Dark</button>
               <button type="button" data-themes="both" aria-pressed="false">Both</button>
             </div>
+            <button id="copy-export" type="button" class="btn">Copy</button>
           </div>
         </div>
         <pre id="export-output" class="export-output" tabindex="0" aria-label="Exported palette"></pre>

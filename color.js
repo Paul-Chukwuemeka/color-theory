@@ -792,19 +792,38 @@
     return entries;
   }
 
-  function cssBlock(palette, selector) {
-    var lines = [selector + ' {'];
+  function cssBlock(palette, selector, indent) {
+    var pad = indent || '';
+    var lines = [pad + selector + ' {'];
     roleEntries(palette).forEach(function (entry) {
-      lines.push('  --color-' + entry[0] + ': ' + entry[1] + ';');
+      lines.push(pad + '  --color-' + entry[0] + ': ' + entry[1] + ';');
     });
-    lines.push('}');
+    lines.push(pad + '}');
     return lines.join('\n');
+  }
+
+  function tailwindBlock(palette, selector) {
+    return cssBlock(palette, selector || '@theme');
+  }
+
+  function roleMap(palette) {
+    var map = {};
+    roleEntries(palette).forEach(function (entry) {
+      map[entry[0]] = entry[1];
+    });
+    return map;
   }
 
   function hexBlock(palette) {
     return roleEntries(palette).map(function (entry) {
       return entry[0].padEnd(12) + ' ' + entry[1];
     }).join('\n');
+  }
+
+  function jsonBlock(palette, indent) {
+    var body = JSON.stringify(roleMap(palette), null, 2);
+    if (!indent) return body;
+    return body.split('\n').map(function (line) { return indent + line; }).join('\n');
   }
 
   function pickReadable(bgHex, preferredHex) {
@@ -815,20 +834,38 @@
   }
 
   function formatExport(palettes, opts) {
-    var format = opts.format === 'css' ? 'css' : 'hex';
-    var themes = opts.themes || 'light';
-    var list = themes === 'both' ? ['light', 'dark'] : [themes];
+    var requested = opts.format;
+    var format = requested === 'css' || requested === 'tailwind' || requested === 'json'
+      ? requested
+      : 'hex';
+    var themes = opts.themes === 'dark' || opts.themes === 'both' ? opts.themes : 'light';
 
-    var parts = list.map(function (theme) {
+    if (themes === 'both') {
       if (format === 'css') {
-        var selector = themes === 'both' && theme === 'dark' ? '[data-theme="dark"]' : ':root';
-        return cssBlock(palettes[theme], selector);
+        // Three blocks: light, an explicit dark override, and an OS preference
+        // fallback that cannot beat a deliberate light choice.
+        return cssBlock(palettes.light, ':root') + '\n\n' +
+          cssBlock(palettes.dark, '[data-theme="dark"]') + '\n\n' +
+          '@media (prefers-color-scheme: dark) {\n' +
+          cssBlock(palettes.dark, ':root:not([data-theme="light"])', '  ') + '\n}';
       }
-      var body = hexBlock(palettes[theme]);
-      return themes === 'both' ? '/* ' + theme + ' */\n' + body : body;
-    });
+      if (format === 'tailwind') {
+        return tailwindBlock(palettes.light) + '\n\n' +
+          tailwindBlock(palettes.dark, '[data-theme="dark"]');
+      }
+      if (format === 'json') {
+        return JSON.stringify({
+          light: roleMap(palettes.light),
+          dark: roleMap(palettes.dark)
+        }, null, 2);
+      }
+      return '/* light */\n' + hexBlock(palettes.light) + '\n\n/* dark */\n' + hexBlock(palettes.dark);
+    }
 
-    return parts.join('\n\n');
+    if (format === 'css') return cssBlock(palettes[themes], ':root');
+    if (format === 'tailwind') return tailwindBlock(palettes[themes]);
+    if (format === 'json') return jsonBlock(palettes[themes]);
+    return hexBlock(palettes[themes]);
   }
 
   return {

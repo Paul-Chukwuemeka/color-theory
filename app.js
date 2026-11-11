@@ -49,6 +49,7 @@
     exportThemes: document.getElementById('export-themes'),
     exportOutput: document.getElementById('export-output'),
     copyAll: document.getElementById('copy-all'),
+    copyExport: document.getElementById('copy-export'),
     themeLight: document.getElementById('theme-light'),
     themeDark: document.getElementById('theme-dark'),
     toast: document.getElementById('toast')
@@ -671,7 +672,10 @@
   function wireExport() {
     Array.prototype.forEach.call(els.exportFormat.children, function (button) {
       button.addEventListener('click', function () {
-        state.exportFormat = button.dataset.format === 'css' ? 'css' : 'hex';
+        var value = button.dataset.format;
+        state.exportFormat = value === 'css' || value === 'tailwind' || value === 'json'
+          ? value
+          : 'hex';
         render();
       });
     });
@@ -688,6 +692,10 @@
   function wireCopy() {
     els.copyAll.addEventListener('click', function () {
       copyText(els.exportOutput.textContent, 'Palette copied');
+    });
+
+    els.copyExport.addEventListener('click', function () {
+      copyText(els.exportOutput.textContent, 'Export copied');
     });
 
     els.swatchRow.addEventListener('click', function (event) {

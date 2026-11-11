@@ -153,6 +153,50 @@ test('dark-only css export uses :root so it works when pasted', () => {
   assert.ok(!out.includes('[data-theme="dark"]'));
 });
 
+test('both-theme css export has three blocks, including an OS preference fallback', () => {
+  const light = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light' });
+  const dark = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'dark' });
+  const out = C.formatExport({ light, dark }, { format: 'css', themes: 'both' });
+  assert.ok(out.includes(':root {'));
+  assert.ok(out.includes('[data-theme="dark"] {'));
+  assert.ok(out.includes('@media (prefers-color-scheme: dark)'));
+  // The OS dark block must not beat an explicit light choice.
+  assert.ok(out.includes(':root:not([data-theme="light"])'));
+  // Each theme keeps its own background.
+  assert.ok(out.includes(light.bg));
+  assert.ok(out.includes(dark.bg));
+});
+
+test('tailwind v4 export emits an @theme block with the palette tokens', () => {
+  const light = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light' });
+  const dark = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'dark' });
+  const out = C.formatExport({ light, dark }, { format: 'tailwind', themes: 'light' });
+  assert.ok(out.startsWith('@theme {'));
+  assert.ok(out.includes('--color-bg: ' + light.bg + ';'));
+  assert.ok(out.includes('--color-accent-text: ' + light.accentText + ';'));
+  assert.ok(out.includes('--color-on-accent: ' + light.onAccent + ';'));
+
+  const both = C.formatExport({ light, dark }, { format: 'tailwind', themes: 'both' });
+  assert.ok(both.includes('@theme {'));
+  assert.ok(both.includes('[data-theme="dark"] {'));
+  assert.ok(both.includes(dark.bg));
+});
+
+test('json export is valid and follows the theme selection', () => {
+  const light = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light' });
+  const dark = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'dark' });
+
+  const single = JSON.parse(C.formatExport({ light, dark }, { format: 'json', themes: 'light' }));
+  assert.strictEqual(single.bg, light.bg);
+  assert.strictEqual(single['on-accent'], light.onAccent);
+  assert.strictEqual(single['accent-text'], light.accentText);
+
+  const both = JSON.parse(C.formatExport({ light, dark }, { format: 'json', themes: 'both' }));
+  assert.strictEqual(both.light.bg, light.bg);
+  assert.strictEqual(both.dark.bg, dark.bg);
+  assert.strictEqual(both.light.text, light.text);
+});
+
 test('pickReadable keeps the preferred color only when it reads', () => {
   assert.strictEqual(C.pickReadable('#00FF00', '#FFFFFF'), '#000000');
   assert.strictEqual(C.pickReadable('#0B0D14', '#151628'), '#FFFFFF');
