@@ -4,10 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Color Theory</title>
-  <link rel="stylesheet" href="styles.css?v=9">
-  <script src="color.js?v=9" defer></script>
-  <script src="preview.js?v=9" defer></script>
-  <script src="app.js?v=9" defer></script>
+  <meta name="description" content="Turn one color into a contrast-checked UI palette with accessible text pairs, seven app types and six harmonies.">
+  <meta name="theme-color" content="#6366F1">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Color Theory">
+  <meta property="og:description" content="Turn one color into a contrast-checked UI palette with accessible text pairs, seven app types and six harmonies.">
+  <meta property="og:image" content="screenshot.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="styles.css?v=12">
+  <script src="color.js?v=12" defer></script>
+  <script src="state.js?v=12" defer></script>
+  <script src="schedule.js?v=12" defer></script>
+  <script src="preview.js?v=12" defer></script>
+  <script src="app.js?v=12" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -15,11 +25,13 @@
       <h1>Color Theory</h1>
       <p class="tagline">A usable scheme, fast.</p>
     </div>
-    <div id="theme-toggle" class="segmented" role="group" aria-label="Palette theme">
-      <button id="theme-light" type="button" class="is-active" aria-pressed="true">Light</button>
-      <button id="theme-dark" type="button" aria-pressed="false">Dark</button>
+    <div id="theme-toggle" class="segmented" role="group" aria-label="Preview theme">
+      <button id="theme-light" type="button" class="is-active" aria-pressed="true" aria-label="Preview: Light">Preview: Light</button>
+      <button id="theme-dark" type="button" aria-pressed="false" aria-label="Preview: Dark">Preview: Dark</button>
     </div>
   </header>
+
+  <div id="mobile-strip" class="mobile-strip" aria-hidden="true"></div>
 
   <div class="layout">
     <aside class="rail" aria-label="Palette controls">
@@ -94,7 +106,8 @@
 
       <section class="panel">
         <h2 class="panel-title">In context</h2>
-        <div id="preview-card" class="preview-card"></div>
+        <div id="preview-card" class="preview-card" aria-hidden="true"></div>
+        <p id="preview-summary" class="sr-only"></p>
       </section>
 
       <section class="panel">
@@ -104,12 +117,15 @@
             <div id="export-format" class="segmented" role="group" aria-label="Export format">
               <button type="button" data-format="hex" class="is-active" aria-pressed="true">Hex</button>
               <button type="button" data-format="css" aria-pressed="false">CSS</button>
+              <button type="button" data-format="tailwind" aria-pressed="false">Tailwind</button>
+              <button type="button" data-format="json" aria-pressed="false">JSON</button>
             </div>
             <div id="export-themes" class="segmented" role="group" aria-label="Export themes">
               <button type="button" data-themes="light" class="is-active" aria-pressed="true">Light</button>
               <button type="button" data-themes="dark" aria-pressed="false">Dark</button>
               <button type="button" data-themes="both" aria-pressed="false">Both</button>
             </div>
+            <button id="copy-export" type="button" class="btn">Copy</button>
           </div>
         </div>
         <pre id="export-output" class="export-output" tabindex="0" aria-label="Exported palette"></pre>

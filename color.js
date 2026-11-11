@@ -15,6 +15,11 @@
     return '#' + s.toUpperCase();
   }
 
+  function isCompleteHex(input) {
+    if (typeof input !== 'string') return false;
+    return /^#?[0-9a-f]{6}$/i.test(input.trim());
+  }
+
   function hexToRgb(hex) {
     const norm = normalizeHex(hex);
     if (!norm) throw new Error('Invalid hex: ' + hex);
@@ -109,7 +114,7 @@
   function relativeLuminance(rgb) {
     function channel(v) {
       const c = v / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     }
     return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b);
   }
@@ -122,8 +127,35 @@
     return (light + 0.05) / (dark + 0.05);
   }
 
+  // Walk a colour's lightness toward the readable side until it clears the
+  // floor. The fill itself is never touched: this makes a text-safe twin.
+  function ensureContrast(fg, bg, min) {
+    const floor = min || 4.5;
+    const norm = normalizeHex(fg);
+    if (!norm) return fg;
+    if (contrastRatio(norm, bg) >= floor) return norm;
+
+    const hsl = rgbToHsl(hexToRgb(norm));
+    // Below this luminance black and white are equally readable; above it,
+    // darkening is the shorter trip.
+    const first = relativeLuminance(hexToRgb(bg)) > 0.18 ? -1 : 1;
+
+    function walk(direction) {
+      for (let i = 1; i <= 50; i++) {
+        const l = hsl.l + direction * 0.02 * i;
+        if (l < 0 || l > 1) return null;
+        const candidate = rgbToHex(hslToRgb({ h: hsl.h, s: hsl.s, l: l }));
+        if (contrastRatio(candidate, bg) >= floor) return candidate;
+      }
+      return null;
+    }
+
+    return walk(first) || walk(-first) ||
+      (contrastRatio('#000000', bg) >= contrastRatio('#FFFFFF', bg) ? '#000000' : '#FFFFFF');
+  }
+
   var HARMONIES = [
-    { id: 'analogous', label: 'Analogous', partner: 60, extras: [30, -30] },
+    { id: 'analogous', label: 'Analogous', partner: 60, extras: [90, 120] },
     { id: 'complementary', label: 'Complementary', partner: 180, extras: [] },
     { id: 'split-complementary', label: 'Split', partner: 150, extras: [210] },
     { id: 'triadic', label: 'Triadic', partner: 120, extras: [240] },
@@ -143,6 +175,7 @@
     { key: 'bg', prop: 'bg', priority: 1 },
     { key: 'surface', prop: 'surface', priority: 4 },
     { key: 'text', prop: 'text', priority: 2 },
+    { key: 'text-muted', prop: 'textMuted', priority: 10 },
     { key: 'accent', prop: 'accent', priority: 3 },
     { key: 'accent-2', prop: 'accent2', priority: 5 },
     { key: 'accent-soft', prop: 'accentSoft', priority: 6 },
@@ -377,28 +410,54 @@
     });
   }
 
-  function monoExtras(baseHue, s, l, count, type) {
+  function monoExtras(baseHue, s, l, count, type, excludeHex) {
     var out = [];
-    var i = 1;
-    while (out.length < count && i < 30) {
-      var offset = 0.14 * Math.ceil(i / 2);
-      var sign = i % 2 === 1 ? 1 : -1;
-      var nextL = l + sign * offset;
-      if (nextL > 0.95 || nextL < 0.08) nextL = l - sign * offset;
-      var nextS = Math.max(0, s - 0.04 * (offset / 0.14));
+    var seen = {};
+    // The accent can be shaped differently from the extras, so the caller
+    // supplies its actual hex: seeding with a recomputed colour let a
+    // same-lightness extra come out as the accent again.
+    var accentHex = excludeHex ||
+      rgbToHex(hslToRgb({ h: baseHue, s: s, l: l }));
+    seen[accentHex] = true;
+
+    // Lightness steps on both sides of the base, nearest first, so a small
+    // palette stays close to the accent and a large one walks outwards.
+    var levels = [];
+    for (var v = 0.08; v <= 0.9501; v += 0.04) levels.push(Math.round(v * 100) / 100);
+    levels.sort(function (a, b) {
+      return Math.abs(a - l) - Math.abs(b - l) || b - a;
+    });
+
+    function add(candidateL, candidateS) {
+      var nextS = Math.max(0, Math.min(1, candidateS));
       // The saturation already carries the type's shaping; only the floor and
       // the ceiling are applied here, so the rule is not applied twice.
       if (type) nextS = Math.min(Math.max(nextS, type.accentSatMin), type.accentSatMax);
-      out.push(rgbToHex(hslToRgb({ h: baseHue, s: nextS, l: nextL })));
-      i++;
+      var hex = rgbToHex(hslToRgb({ h: baseHue, s: nextS, l: candidateL }));
+      if (seen[hex]) return;
+      seen[hex] = true;
+      out.push(hex);
+    }
+
+    // Walk candidates until the palette has count unique colours, not a fixed
+    // number of steps: the old fixed walk pushed the same lightness twice on
+    // light and dark bases.
+    var shifts = [0, -0.08, 0.08, -0.16, 0.16];
+    for (var k = 0; k < shifts.length && out.length < count; k++) {
+      for (var i = 0; i < levels.length && out.length < count; i++) {
+        var level = levels[i];
+        if (shifts[k] === 0 && Math.abs(level - l) < 0.02) continue;
+        var eased = s + shifts[k] - 0.03 * Math.min(1, Math.abs(level - l) / 0.14);
+        add(level, eased);
+      }
     }
     return out;
   }
 
-  function generateExtras(baseHue, harmonyId, count, s, l, type) {
+  function generateExtras(baseHue, harmonyId, count, s, l, type, accentHex) {
     if (count <= 0) return [];
     if (harmonyById(harmonyId).partner === null) {
-      return monoExtras(baseHue, s, l, count, type);
+      return monoExtras(baseHue, s, l, count, type, accentHex);
     }
     var taken = [baseHue];
     var partner = partnerHue(baseHue, harmonyId);
@@ -424,9 +483,18 @@
     return 'fail';
   }
 
-  function makeContrast(key, label, fg, bg) {
+  // Display only: truncate rather than round, so a ratio that is below AA
+  // never prints as 4.50 and reads like it passed.
+  function formatRatio(ratio) {
+    return (Math.floor(ratio * 100) / 100).toFixed(2);
+  }
+
+  function makeContrast(key, label, fg, bg, note) {
     var ratio = contrastRatio(fg, bg);
-    return { key: key, label: label, fg: fg, bg: bg, ratio: ratio, level: contrastLevel(ratio) };
+    return {
+      key: key, label: label, fg: fg, bg: bg, ratio: ratio,
+      level: contrastLevel(ratio), note: note || null
+    };
   }
 
   function deriveText(h, mode, bg, surface, minRatio) {
@@ -468,16 +536,65 @@
       type.accentSatMax !== 1 || type.accentSatMin !== 0;
   }
 
-  function buildAccent2(hueValue, s, l, type) {
-    if (!shapesAccent(type, 'accent2')) {
-      return rgbToHex(hslToRgb({ h: hueValue, s: s, l: l }));
-    }
+  function buildAccent2(hueValue, s, l, type, satScale) {
+    var scale = satScale || 1;
+    var plain = !shapesAccent(type, 'accent2') && scale === 1;
+    var a2Sat = plain
+      ? s
+      : clamp(shapeSaturation(s, type, 'accent2') * scale, type.accent2SatMin, type.accent2SatMax);
+    // A near-grey base would otherwise make accent-2 just as grey, so the
+    // second accent would not be a second accent at all.
+    if (s < 0.1) a2Sat = Math.max(a2Sat, Math.min(0.45, type.accent2SatMax));
     // Shape in HSL space and keep the intended hue. Reading the hue back out
-    // of the raw colour would lose it whenever the base is achromatic, where
-    // the raw colour is a grey and every hue reads as 0.
-    var a2Sat = shapeSaturation(s, type, 'accent2');
+    // of a raw colour loses it whenever the base is achromatic, where every
+    // hue reads as 0.
     var a2L = clamp(l + type.accent2Light, 0.05, 0.95);
     return rgbToHex(hslToRgb({ h: hueValue, s: a2Sat, l: a2L }));
+  }
+
+  // Eight-bit colour loses hue resolution in very dark or very light tones:
+  // a partner that is 60 degrees away by design can read as 52 degrees on
+  // screen. Step the intended hue outwards until the painted pair really is
+  // 60 degrees apart, keeping the first candidate that passes.
+  function buildSeparatedAccent2(accentHex, intendedHue, s, l, type, satScale) {
+    var accentHsl = rgbToHsl(hexToRgb(accentHex));
+    if (accentHsl.s < 0.1) {
+      return buildAccent2(intendedHue, s, l, type, satScale);
+    }
+    var best = null;
+    for (var step = 0; step <= 120; step++) {
+      var offsets = step === 0 ? [0] : [step, -step];
+      for (var i = 0; i < offsets.length; i++) {
+        var candidate = buildAccent2(wrapHue(intendedHue + offsets[i]), s, l, type, satScale);
+        var gap = hueGap(rgbToHsl(hexToRgb(candidate)).h, accentHsl.h);
+        if (best === null || gap > best.gap) best = { hex: candidate, gap: gap };
+        if (gap >= 60) return candidate;
+      }
+    }
+    return best.hex;
+  }
+
+  // Keep a semantic colour distinguishable from the brand, and from the other
+  // semantics, without dropping below the floor where it is used as text.
+  function refineSemantic(hex, accentHue, allSemantics, bg, floor) {
+    var hsl = rgbToHsl(hexToRgb(hex));
+    var candidate = hex;
+
+    if (accentHue !== null && hueGap(hsl.h, accentHue) < 25) {
+      var best = null;
+      [45, -45].forEach(function (shift) {
+        var hue = wrapHue(hsl.h + shift);
+        var minGap = hueGap(hue, accentHue);
+        Object.keys(allSemantics).forEach(function (key) {
+          if (allSemantics[key] === hex) return;
+          minGap = Math.min(minGap, hueGap(hue, rgbToHsl(hexToRgb(allSemantics[key])).h));
+        });
+        if (best === null || minGap > best.gap) best = { h: hue, gap: minGap };
+      });
+      candidate = rgbToHex(hslToRgb({ h: best.h, s: hsl.s, l: hsl.l }));
+    }
+
+    return ensureContrast(candidate, bg, floor);
   }
 
   function buildPalette(opts) {
@@ -502,6 +619,12 @@
       h: neutralHue, s: type.neutralSat[idx] - 0.02, l: type.neutralSurfaceL[idx]
     }));
     var text = deriveText(neutralHue, mode, bg, surface, type.textRatio);
+    // A quieter text tone, mixed toward the background and then walked back
+    // until it still meets the app type's floor.
+    var textMuted = ensureContrast(mix(text, bg, 0.35), surface, type.textRatio);
+    if (contrastRatio(textMuted, bg) < type.textRatio) {
+      textMuted = ensureContrast(textMuted, bg, type.textRatio);
+    }
 
     var accentSat = shapeSaturation(s, type, 'accent');
     var accentL = clamp(l + type.accentLight, 0.05, 0.95);
@@ -516,21 +639,34 @@
         h: h, s: s * 0.55, l: Math.min(l + 0.22, 0.95)
       }));
     } else {
-      var accent2HueValue = wrapHue(h + rule.partner);
+      var accent2HueValue = partnerHue(h, rule.id);
       if (type.accent2Hue === 'warm' && hueGap(35, h) >= 60) {
         accent2HueValue = 35;
       }
-      accent2 = buildAccent2(accent2HueValue, s, l, type);
+      // Analogous wants a near neighbour rather than a shout, so its second
+      // accent is the same harmony at a lower saturation.
+      accent2 = buildSeparatedAccent2(
+        accentFinal, accent2HueValue, s, l, type, rule.id === 'analogous' ? 0.6 : 1
+      );
     }
 
     var extraSat = shapeSaturation(s, type, 'accent');
+    var extraL = clamp(l, 0.12, 0.9);
+    // Extras are hue-distinct, so an achromatic base needs some chroma or
+    // every extra would be the same grey.
+    if (s < 0.1) extraSat = clamp(0.45, type.accentSatMin, type.accentSatMax);
     var extras = rule.extras.map(function (d) {
-      return rgbToHex(hslToRgb({ h: wrapHue(h + d), s: extraSat, l: l }));
+      return rgbToHex(hslToRgb({ h: wrapHue(h + d), s: extraSat, l: extraL }));
     });
 
     var accentSoft = mix(bg, accentFinal, type.accentSoftMix[idx]);
 
     var semantic = type.semantics[mode];
+    var accentFinalHsl = rgbToHsl(hexToRgb(accentFinal));
+    var accentHue = accentFinalHsl.s >= 0.1 ? accentFinalHsl.h : null;
+    var success = refineSemantic(semantic.success, accentHue, semantic, bg, 4.5);
+    var warning = refineSemantic(semantic.warning, accentHue, semantic, bg, 4.5);
+    var danger = refineSemantic(semantic.danger, accentHue, semantic, bg, 4.5);
 
     var size = normalizeSize(opts.size);
     var keptDefs;
@@ -540,7 +676,7 @@
       keptDefs = ROLE_DEFS.slice()
         .sort(function (a, b) { return a.priority - b.priority; })
         .slice(0, Math.min(size, ROLE_DEFS.length));
-      extras = generateExtras(h, rule.id, size - keptDefs.length, extraSat, l, type);
+      extras = generateExtras(h, rule.id, size - keptDefs.length, extraSat, extraL, type, accentFinal);
     }
 
     var kept = {};
@@ -550,12 +686,13 @@
       bg: bg,
       surface: surface,
       text: text,
+      textMuted: textMuted,
       accent: accentFinal,
       accent2: accent2,
       accentSoft: accentSoft,
-      success: semantic.success,
-      warning: semantic.warning,
-      danger: semantic.danger
+      success: success,
+      warning: warning,
+      danger: danger
     };
 
     function roleColor(prop) {
@@ -566,6 +703,7 @@
       bg: roleColor('bg'),
       surface: roleColor('surface'),
       text: roleColor('text'),
+      textMuted: roleColor('textMuted'),
       accent: roleColor('accent'),
       accent2: roleColor('accent2'),
       accentSoft: roleColor('accentSoft'),
@@ -574,12 +712,23 @@
       danger: roleColor('danger')
     };
 
+    var accentText = palette.accent ? ensureContrast(palette.accent, palette.bg, 4.5) : null;
+    var accent2Text = palette.accent2 ? ensureContrast(palette.accent2, palette.bg, 4.5) : null;
     var onAccent = palette.accent ? pickReadable(palette.accent, '#FFFFFF') : null;
     var onAccent2 = palette.accent2 ? pickReadable(palette.accent2, '#FFFFFF') : null;
     var onSuccess = palette.success ? pickReadable(palette.success, '#FFFFFF') : null;
     var onWarning = palette.warning ? pickReadable(palette.warning, '#FFFFFF') : null;
     var onDanger = palette.danger ? pickReadable(palette.danger, '#FFFFFF') : null;
 
+    function rejectedWhite(fill, chosen) {
+      if (!fill || chosen === '#FFFFFF') return null;
+      var white = contrastRatio('#FFFFFF', fill);
+      if (white >= 4.5) return null;
+      return 'White rejected (' + formatRatio(white) + ':1)';
+    }
+
+    palette.accentText = accentText;
+    palette.accent2Text = accent2Text;
     palette.onAccent = onAccent;
     palette.onAccent2 = onAccent2;
     palette.onSuccess = onSuccess;
@@ -591,23 +740,29 @@
       .map(function (def) { return { key: def.key, hex: colors[def.prop] }; });
     palette.contrast = [];
 
-    function pushContrast(key, label, fg, background) {
+    function pushContrast(key, label, fg, background, note) {
       if (!fg || !background) return;
-      palette.contrast.push(makeContrast(key, label, fg, background));
+      palette.contrast.push(makeContrast(key, label, fg, background, note));
     }
 
     pushContrast('text-bg', 'Text on background', palette.text, palette.bg);
     pushContrast('text-surface', 'Text on surface', palette.text, palette.surface);
-    pushContrast('accent-bg', 'Accent on background', palette.accent, palette.bg);
-    pushContrast('on-accent', 'Label on accent', onAccent, palette.accent);
-    pushContrast('accent2-bg', 'Accent-2 on background', palette.accent2, palette.bg);
-    pushContrast('on-accent2', 'Label on accent-2', onAccent2, palette.accent2);
+    pushContrast('text-muted-bg', 'Muted text on background', palette.textMuted, palette.bg);
+    pushContrast('accent-bg', 'Accent text on background', palette.accentText, palette.bg);
+    pushContrast('on-accent', 'Label on accent', onAccent, palette.accent,
+      rejectedWhite(palette.accent, onAccent));
+    pushContrast('accent2-bg', 'Accent-2 text on background', palette.accent2Text, palette.bg);
+    pushContrast('on-accent2', 'Label on accent-2', onAccent2, palette.accent2,
+      rejectedWhite(palette.accent2, onAccent2));
     pushContrast('success-bg', 'Success on background', palette.success, palette.bg);
-    pushContrast('on-success', 'Label on success', onSuccess, palette.success);
+    pushContrast('on-success', 'Label on success', onSuccess, palette.success,
+      rejectedWhite(palette.success, onSuccess));
     pushContrast('warning-bg', 'Warning on background', palette.warning, palette.bg);
-    pushContrast('on-warning', 'Label on warning', onWarning, palette.warning);
+    pushContrast('on-warning', 'Label on warning', onWarning, palette.warning,
+      rejectedWhite(palette.warning, onWarning));
     pushContrast('danger-bg', 'Danger on background', palette.danger, palette.bg);
-    pushContrast('on-danger', 'Label on danger', onDanger, palette.danger);
+    pushContrast('on-danger', 'Label on danger', onDanger, palette.danger,
+      rejectedWhite(palette.danger, onDanger));
 
     return palette;
   }
@@ -657,25 +812,44 @@
     onColors.forEach(function (entry) {
       if (entry[1]) entries.push(entry);
     });
+    if (palette.accentText) entries.push(['accent-text', palette.accentText]);
+    if (palette.accent2Text) entries.push(['accent-2-text', palette.accent2Text]);
     palette.extras.forEach(function (hex, i) {
       entries.push(['extra-' + (i + 1), hex]);
     });
     return entries;
   }
 
-  function cssBlock(palette, selector) {
-    var lines = [selector + ' {'];
+  function cssBlock(palette, selector, indent) {
+    var pad = indent || '';
+    var lines = [pad + selector + ' {'];
     roleEntries(palette).forEach(function (entry) {
-      lines.push('  --color-' + entry[0] + ': ' + entry[1] + ';');
+      lines.push(pad + '  --color-' + entry[0] + ': ' + entry[1] + ';');
     });
-    lines.push('}');
+    lines.push(pad + '}');
     return lines.join('\n');
+  }
+
+  function tailwindBlock(palette, selector) {
+    return cssBlock(palette, selector || '@theme');
+  }
+
+  function roleMap(palette) {
+    var map = {};
+    roleEntries(palette).forEach(function (entry) {
+      map[entry[0]] = entry[1];
+    });
+    return map;
   }
 
   function hexBlock(palette) {
     return roleEntries(palette).map(function (entry) {
       return entry[0].padEnd(12) + ' ' + entry[1];
     }).join('\n');
+  }
+
+  function jsonBlock(palette) {
+    return JSON.stringify(roleMap(palette), null, 2);
   }
 
   function pickReadable(bgHex, preferredHex) {
@@ -686,24 +860,43 @@
   }
 
   function formatExport(palettes, opts) {
-    var format = opts.format === 'css' ? 'css' : 'hex';
-    var themes = opts.themes || 'light';
-    var list = themes === 'both' ? ['light', 'dark'] : [themes];
+    var requested = opts.format;
+    var format = requested === 'css' || requested === 'tailwind' || requested === 'json'
+      ? requested
+      : 'hex';
+    var themes = opts.themes === 'dark' || opts.themes === 'both' ? opts.themes : 'light';
 
-    var parts = list.map(function (theme) {
+    if (themes === 'both') {
       if (format === 'css') {
-        var selector = themes === 'both' && theme === 'dark' ? '[data-theme="dark"]' : ':root';
-        return cssBlock(palettes[theme], selector);
+        // Three blocks: light, an explicit dark override, and an OS preference
+        // fallback that cannot beat a deliberate light choice.
+        return cssBlock(palettes.light, ':root') + '\n\n' +
+          cssBlock(palettes.dark, '[data-theme="dark"]') + '\n\n' +
+          '@media (prefers-color-scheme: dark) {\n' +
+          cssBlock(palettes.dark, ':root:not([data-theme="light"])', '  ') + '\n}';
       }
-      var body = hexBlock(palettes[theme]);
-      return themes === 'both' ? '/* ' + theme + ' */\n' + body : body;
-    });
+      if (format === 'tailwind') {
+        return tailwindBlock(palettes.light) + '\n\n' +
+          tailwindBlock(palettes.dark, '[data-theme="dark"]');
+      }
+      if (format === 'json') {
+        return JSON.stringify({
+          light: roleMap(palettes.light),
+          dark: roleMap(palettes.dark)
+        }, null, 2);
+      }
+      return '/* light */\n' + hexBlock(palettes.light) + '\n\n/* dark */\n' + hexBlock(palettes.dark);
+    }
 
-    return parts.join('\n\n');
+    if (format === 'css') return cssBlock(palettes[themes], ':root');
+    if (format === 'tailwind') return tailwindBlock(palettes[themes]);
+    if (format === 'json') return jsonBlock(palettes[themes]);
+    return hexBlock(palettes[themes]);
   }
 
   return {
     normalizeHex: normalizeHex,
+    isCompleteHex: isCompleteHex,
     hexToRgb: hexToRgb,
     rgbToHex: rgbToHex,
     rgbToHsl: rgbToHsl,
@@ -717,6 +910,8 @@
     partnerHue: partnerHue,
     extraHues: extraHues,
     contrastLevel: contrastLevel,
+    formatRatio: formatRatio,
+    ensureContrast: ensureContrast,
     buildPalette: buildPalette,
     buildSuggestions: buildSuggestions,
     pickReadable: pickReadable,

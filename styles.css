@@ -113,6 +113,12 @@ input {
   min-width: 0;
 }
 
+/* The compact palette strip is a mobile-only shortcut. The real swatch grid
+   still carries the labels and the keyboard path. */
+.mobile-strip {
+  display: none;
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -160,6 +166,7 @@ input {
 }
 
 .segmented button {
+  min-height: 24px;
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -167,6 +174,7 @@ input {
   padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .segmented button.is-active {
@@ -255,6 +263,7 @@ input {
 }
 
 .chip {
+  min-height: 24px;
   border: 1px solid var(--line);
   background: var(--panel);
   color: var(--muted);
@@ -284,13 +293,15 @@ input {
 }
 
 .hue-ring {
+  --hue-handle-radius: 60px;
   position: relative;
   width: 150px;
   height: 150px;
   border-radius: 50%;
   background: conic-gradient(from 0deg,
-    #EF4444, #F59E0B, #84CC16, #10B981,
-    #06B6D4, #6366F1, #A855F7, #EF4444);
+    hsl(0 85% 55%), hsl(60 85% 55%), hsl(120 85% 55%),
+    hsl(180 85% 55%), hsl(240 85% 55%), hsl(300 85% 55%),
+    hsl(360 85% 55%));
   cursor: crosshair;
   touch-action: none;
 }
@@ -315,7 +326,8 @@ input {
   border: 2px solid var(--ink);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
   pointer-events: none;
-  transform: rotate(0deg) translateY(-75px);
+  --hue-angle: 0deg;
+  transform: rotate(var(--hue-angle)) translateY(calc(-1 * var(--hue-handle-radius)));
 }
 
 .hue-controls {
@@ -329,6 +341,7 @@ input {
 
 .hue-controls input[type="range"] {
   width: 100%;
+  min-height: 24px;
   accent-color: var(--ink);
 }
 
@@ -404,6 +417,7 @@ input {
 }
 
 .link-btn {
+  min-height: 24px;
   border: 0;
   background: none;
   padding: 0;
@@ -457,7 +471,7 @@ input {
 }
 
 .suggestion-meta {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -491,7 +505,7 @@ input {
 
 .swatch-meta {
   padding: 7px 9px;
-  font-size: 10px;
+  font-size: 11px;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -520,6 +534,7 @@ input {
 }
 
 .extra {
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -527,7 +542,7 @@ input {
   border-radius: 99px;
   padding: 3px 8px 3px 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
+  font-size: 11px;
   background: var(--panel);
   cursor: pointer;
 }
@@ -539,7 +554,7 @@ input {
 .extra-ratio {
   font-style: normal;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
   padding-left: 4px;
   border-left: 1px solid var(--line);
 }
@@ -593,6 +608,12 @@ input {
   min-width: 0;
 }
 
+.contrast-note {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .contrast-ratio {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
@@ -600,7 +621,7 @@ input {
 }
 
 .pill {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
@@ -625,8 +646,11 @@ input {
   --pv-bg: #0f172a;
   --pv-surface: #1e293b;
   --pv-text: #f8fafc;
+  --pv-text-muted: #cbd5e1;
   --pv-accent: #6366f1;
+  --pv-accent-text: #a5b4fc;
   --pv-accent2: #a763f1;
+  --pv-accent2-text: #c4b5fd;
   --pv-accent-soft: #a5b4fc;
   --pv-on-accent: #ffffff;
   --pv-on-accent2: #ffffff;
@@ -684,11 +708,11 @@ input {
 }
 
 .mock [data-text="accent"] {
-  color: var(--pv-accent);
+  color: var(--pv-accent-text);
 }
 
 .mock [data-text="accent2"] {
-  color: var(--pv-accent2);
+  color: var(--pv-accent2-text);
 }
 
 .mock [data-text="accentSoft"] {
@@ -771,11 +795,11 @@ input {
 
 .mock-eyebrow {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  opacity: 0.75;
+  color: var(--pv-text-muted);
   margin-bottom: 8px;
 }
 
@@ -789,7 +813,7 @@ input {
 
 .mock-text {
   font-size: 13px;
-  opacity: 0.8;
+  color: var(--pv-text-muted);
   max-width: 40ch;
 }
 
@@ -815,10 +839,17 @@ input {
 }
 
 .mock-tag {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 99px;
+}
+
+.mock-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .mock-panel {
@@ -842,7 +873,7 @@ input {
 }
 
 .mock-badge {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
@@ -882,8 +913,8 @@ input {
 }
 
 .mock-stats span {
-  font-size: 10px;
-  opacity: 0.72;
+  font-size: 11px;
+  color: var(--pv-text-muted);
 }
 
 .mock-states {
@@ -894,10 +925,39 @@ input {
 }
 
 .mock-state {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 99px;
+}
+
+.mock-state.is-hover {
+  filter: brightness(1.12);
+}
+
+.mock-state.is-disabled {
+  background: var(--pv-surface);
+  color: var(--pv-text-muted);
+  border: 1px dashed var(--pv-line);
+}
+
+.mock-state.is-focus {
+  outline: 2px solid var(--pv-accent2);
+  outline-offset: 2px;
+}
+
+.mock-input {
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--pv-line);
+  background: var(--pv-surface);
+  color: var(--pv-text-muted);
+}
+
+.mock-input.is-error {
+  border-color: var(--pv-danger);
+  color: var(--pv-danger);
 }
 
 .mock-grid {
@@ -937,11 +997,11 @@ input {
 }
 
 .mock-kpi-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.78;
+  color: var(--pv-text-muted);
 }
 
 .mock-kpi-value {
@@ -951,7 +1011,7 @@ input {
 }
 
 .mock-delta {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
@@ -979,12 +1039,12 @@ input {
 }
 
 .mock-row-value {
-  opacity: 0.78;
+  color: var(--pv-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .mock-pill {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 99px;
@@ -1191,7 +1251,7 @@ input {
 
 .mock-branch {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
+  font-size: 11px;
   padding: 3px 8px;
   border-radius: 6px;
 }
@@ -1280,9 +1340,42 @@ input {
 
 /* ---------- Responsive ---------- */
 
+@media (min-width: 901px) {
+  .rail {
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-width: thin;
+  }
+}
+
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mobile-strip {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    gap: 5px;
+    padding: 8px 16px;
+    background: rgba(244, 244, 245, 0.96);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    backdrop-filter: blur(6px);
+  }
+
+  .mobile-swatch {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    border-radius: 6px;
+    border: 1px solid rgba(24, 24, 27, 0.14);
+    cursor: pointer;
   }
 }
 
@@ -1296,6 +1389,10 @@ input {
     gap: 12px;
   }
 
+  .mobile-strip {
+    padding: 8px 14px;
+  }
+
   .panel {
     padding: 14px;
   }
@@ -1307,43 +1404,39 @@ input {
   .swatch-chip {
     height: 64px;
   }
+
+  .chip {
+    min-height: 32px;
+  }
+
+  .segmented button {
+    min-height: 32px;
+  }
+
+  .extra {
+    min-height: 32px;
+  }
+
+  .link-btn {
+    min-height: 32px;
+  }
+
+  .hue-controls input[type="range"] {
+    min-height: 32px;
+  }
+
+  .stepper {
+    width: 32px;
+    height: 32px;
+  }
+
+  #size-input {
+    min-height: 32px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .toast {
     transition: none;
   }
-}
-
-/* Surface tone on small elements inside a mock. They need an edge, because
-   the card they sit on is often the same tone. */
-.mock-badge.is-surface,
-.mock-pill.is-surface {
-  background: var(--pv-surface);
-  color: var(--pv-on-surface);
-  border: 1px solid var(--pv-line);
-}
-
-.mock-shape.is-surface {
-  background: var(--pv-surface);
-  color: var(--pv-on-surface);
-  border: 1px solid var(--pv-line);
-}
-
-.mock-answer.is-plain {
-  background: var(--pv-surface);
-}
-
-.mock-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-/* Cards keep their edges when the surface tone falls back to the background. */
-.mock-panel,
-.mock-rows,
-.mock-kpi {
-  border: 1px solid var(--pv-line);
 }

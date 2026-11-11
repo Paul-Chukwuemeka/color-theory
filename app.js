@@ -2,6 +2,8 @@
   'use strict';
 
   var C = window.ColorMath;
+  var S = window.AppState;
+  var Schedule = window.Schedule;
 
   var PRESETS = [
     { name: 'Indigo', hex: '#6366F1' },
@@ -18,15 +20,7 @@
     { name: 'Slate', hex: '#64748B' }
   ];
 
-  var state = {
-    hex: '#6366F1',
-    appType: 'general',
-    harmonyId: 'analogous',
-    mode: 'light',
-    exportFormat: 'hex',
-    exportThemes: 'light',
-    size: null
-  };
+  var state = S.fromQuery(S.create(), window.location.search);
 
   var palettes = { light: null, dark: null };
 
@@ -49,11 +43,14 @@
     extrasRow: document.getElementById('extras-row'),
     contrastList: document.getElementById('contrast-list'),
     previewCard: document.getElementById('preview-card'),
+    previewSummary: document.getElementById('preview-summary'),
+    mobileStrip: document.getElementById('mobile-strip'),
     suggestions: document.getElementById('suggestions'),
     exportFormat: document.getElementById('export-format'),
     exportThemes: document.getElementById('export-themes'),
     exportOutput: document.getElementById('export-output'),
     copyAll: document.getElementById('copy-all'),
+    copyExport: document.getElementById('copy-export'),
     themeLight: document.getElementById('theme-light'),
     themeDark: document.getElementById('theme-dark'),
     toast: document.getElementById('toast')
@@ -64,36 +61,39 @@
   }
 
   function activeHsl() {
-    return C.rgbToHsl(C.hexToRgb(state.hex));
+    return state.hsl;
+  }
+
+  function currentHex() {
+    return S.hexOf(state);
   }
 
   function derive() {
+    var hex = currentHex();
     palettes.light = C.buildPalette({
-      hex: state.hex, harmonyId: state.harmonyId, mode: 'light', size: state.size, appType: state.appType
+      hex: hex, harmonyId: state.harmonyId, mode: 'light', size: state.size, appType: state.appType
     });
     palettes.dark = C.buildPalette({
-      hex: state.hex, harmonyId: state.harmonyId, mode: 'dark', size: state.size, appType: state.appType
+      hex: hex, harmonyId: state.harmonyId, mode: 'dark', size: state.size, appType: state.appType
     });
   }
 
   function setHex(hex) {
-    var norm = C.normalizeHex(hex);
-    if (!norm) return false;
-    state.hex = norm;
+    var next = S.fromHex(state, hex);
+    if (!next) return false;
+    state = next;
     render();
     return true;
   }
 
   function setHarmony(id) {
     state.harmonyId = id;
+    state.harmonyTouched = true;
     render();
   }
 
   function setAppType(id) {
-    var type = C.appTypeById(id);
-    state.appType = type.id;
-    state.harmonyId = type.harmonyId;
-    state.mode = type.mode;
+    state = S.applyAppType(state, id);
     render();
   }
 
@@ -103,17 +103,13 @@
   }
 
   function setHue(deg) {
-    var hsl = activeHsl();
-    state.hex = C.rgbToHex(C.hslToRgb({
-      h: C.wrapHue(Number(deg)),
-      s: hsl.s,
-      l: hsl.l
-    }));
+    state = S.setHue(state, deg);
     render();
   }
 
   function setTheme(mode) {
     state.mode = mode === 'dark' ? 'dark' : 'light';
+    state.modeTouched = true;
     render();
   }
 
@@ -167,8 +163,27 @@
 
   /* ---------- Rendering ---------- */
 
+  function syncUrl() {
+    if (!window.history || !window.history.replaceState) return;
+    try {
+      window.history.replaceState(null, '', S.toQuery(state));
+    } catch (e) {
+      // A file:// or sandboxed document cannot rewrite its address; the app
+      // still works, it just cannot be shared from here.
+    }
+  }
+
+  // Render once per frame: a hue drag fires many input events, and each one
+  // used to rebuild the whole palette and every preview.
+  var scheduleRender = Schedule.createBatcher(function (options) {
+    paint(options || {});
+  });
+
   function render(options) {
-    var opts = options || {};
+    scheduleRender(options || {});
+  }
+
+  function paint(opts) {
     derive();
 
     var palette = activePalette();
@@ -176,7 +191,7 @@
     var hue = Math.round(hsl.h) % 360;
 
     if (opts.syncHex !== false) {
-      els.hexInput.value = state.hex;
+      els.hexInput.value = currentHex();
       els.hexInput.classList.remove('is-invalid');
       els.hexInput.removeAttribute('aria-invalid');
       els.hexError.hidden = true;
@@ -193,11 +208,13 @@
     renderSuggestions(hsl);
     renderExport();
     renderThemeState();
+    syncUrl();
   }
 
   function renderPresetState() {
+    var current = currentHex();
     Array.prototype.forEach.call(els.presetGrid.children, function (button) {
-      var active = button.dataset.hex === state.hex;
+      var active = button.dataset.hex === current;
       button.classList.toggle('is-active', active);
       button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
@@ -285,7 +302,7 @@
       if (ratio < 4.5) button.classList.add('is-fill-only');
       button.dataset.hex = hex;
       button.setAttribute('aria-label',
-        'Copy extra-' + (index + 1) + ' ' + hex + ', ' + ratio.toFixed(1) + ' to 1 on the background');
+        'Copy extra-' + (index + 1) + ' ' + hex + ', ' + C.formatRatio(ratio) + ' to 1 on the background');
 
       var dot = document.createElement('i');
       dot.style.background = hex;
@@ -295,7 +312,7 @@
 
       var meta = document.createElement('em');
       meta.className = 'extra-ratio';
-      meta.textContent = ratio.toFixed(1) + ':1';
+      meta.textContent = C.formatRatio(ratio) + ':1';
 
       button.appendChild(dot);
       button.appendChild(label);
@@ -305,10 +322,27 @@
       }
       els.extrasRow.appendChild(button);
     });
+
+    // A second, compact copy of the swatches for the sticky mobile strip.
+    els.mobileStrip.innerHTML = '';
+    function addMobileSwatch(hex, label) {
+      var dot = document.createElement('span');
+      dot.className = 'mobile-swatch';
+      dot.dataset.hex = hex;
+      dot.style.background = hex;
+      dot.title = label + ' ' + hex;
+      els.mobileStrip.appendChild(dot);
+    }
+    palette.roles.forEach(function (role) {
+      addMobileSwatch(role.hex, role.key);
+    });
+    palette.extras.forEach(function (hex, index) {
+      addMobileSwatch(hex, 'extra-' + (index + 1));
+    });
   }
 
   function renderDial(hue) {
-    els.hueHandle.style.transform = 'rotate(' + hue + 'deg) translateY(-75px)';
+    els.hueHandle.style.setProperty('--hue-angle', hue + 'deg');
     els.hueSlider.value = String(hue);
     if (document.activeElement !== els.hueValue) {
       els.hueValue.value = String(hue);
@@ -335,10 +369,16 @@
       var label = document.createElement('span');
       label.className = 'contrast-label';
       label.textContent = entry.label;
+      if (entry.note) {
+        var note = document.createElement('span');
+        note.className = 'contrast-note';
+        note.textContent = entry.note;
+        label.appendChild(note);
+      }
 
       var ratio = document.createElement('span');
       ratio.className = 'contrast-ratio';
-      ratio.textContent = entry.ratio.toFixed(2) + ':1';
+      ratio.textContent = C.formatRatio(entry.ratio) + ':1';
 
       var pill = document.createElement('span');
       pill.className = 'pill';
@@ -365,8 +405,11 @@
     els.previewCard.style.setProperty('--pv-bg', palette.bg);
     els.previewCard.style.setProperty('--pv-surface', surface);
     els.previewCard.style.setProperty('--pv-text', palette.text);
+    els.previewCard.style.setProperty('--pv-text-muted', palette.textMuted || palette.text);
     els.previewCard.style.setProperty('--pv-accent', palette.accent);
+    els.previewCard.style.setProperty('--pv-accent-text', palette.accentText || palette.accent);
     els.previewCard.style.setProperty('--pv-accent2', accent2);
+    els.previewCard.style.setProperty('--pv-accent2-text', palette.accent2Text || accent2);
     els.previewCard.style.setProperty('--pv-accent-soft', accentSoft);
     els.previewCard.style.setProperty('--pv-on-accent', C.pickReadable(palette.accent, '#FFFFFF'));
     // Each label colour is measured against the fill it sits on. on-accent-2
@@ -383,6 +426,12 @@
     els.previewCard.style.setProperty('--pv-on-danger', C.pickReadable(danger, '#FFFFFF'));
 
     els.previewCard.innerHTML = window.Preview.markup(state.appType);
+
+    var typeLabel = C.appTypeById(state.appType).label;
+    els.previewSummary.textContent = 'Preview of a ' + typeLabel + ' screen in ' +
+      state.mode + ' mode. Background ' + palette.bg + ', surface ' + surface +
+      ', text ' + palette.text + ', accent ' + palette.accent +
+      ', accent-2 ' + accent2 + '.';
 
     // A role that is not in the palette cannot be painted, so the element
     // that needed it steps out of the layout instead of showing nothing.
@@ -435,8 +484,11 @@
       button.appendChild(strip);
       button.appendChild(text);
       button.addEventListener('click', function () {
-        state.hex = C.normalizeHex(suggestion.hex);
+        var next = S.fromHex(state, suggestion.hex);
+        if (!next) return;
+        state = next;
         state.harmonyId = suggestion.harmonyId;
+        state.harmonyTouched = true;
         render();
       });
       els.suggestions.appendChild(button);
@@ -475,7 +527,13 @@
     }, 1600);
   }
 
-  function fallbackCopy(text) {
+  // Selecting the text is the last resort: some browsers refuse both the
+  // clipboard API and the execCommand fallback, and the user should still be
+  // able to copy with the keyboard.
+  var selectedArea = null;
+
+  function selectText(text) {
+    clearSelection();
     var area = document.createElement('textarea');
     area.value = text;
     area.setAttribute('readonly', '');
@@ -484,7 +542,19 @@
     area.style.left = '-1000px';
     document.body.appendChild(area);
     area.select();
+    selectedArea = area;
+    return area;
+  }
 
+  function clearSelection() {
+    if (selectedArea && selectedArea.parentNode) {
+      selectedArea.parentNode.removeChild(selectedArea);
+    }
+    selectedArea = null;
+  }
+
+  function fallbackCopy(text) {
+    var area = selectText(text);
     var ok = false;
     try {
       ok = document.execCommand('copy');
@@ -492,7 +562,8 @@
       ok = false;
     }
 
-    document.body.removeChild(area);
+    if (ok) clearSelection();
+    // Otherwise the text stays selected so Ctrl+C still works.
     return ok;
   }
 
@@ -500,41 +571,99 @@
     var message = confirmation || ('Copied ' + text);
 
     function succeed() {
+      clearSelection();
       showToast(message);
+    }
+
+    function blocked() {
+      // Nothing was copied. Say so, and leave the text selected so the user
+      // can still press Ctrl+C.
+      showToast('Copy blocked by the browser — the text is selected, press Ctrl+C');
     }
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(succeed, function () {
         if (fallbackCopy(text)) succeed();
+        else blocked();
       });
     } else if (fallbackCopy(text)) {
       succeed();
+    } else {
+      blocked();
     }
   }
 
   /* ---------- Events ---------- */
 
-  function wireInputs() {
+  function clearHexError() {
+    els.hexInput.classList.remove('is-invalid');
+    els.hexInput.removeAttribute('aria-invalid');
+    els.hexError.hidden = true;
+  }
+
+  function markHexError() {
+    els.hexInput.classList.add('is-invalid');
+    els.hexInput.setAttribute('aria-invalid', 'true');
+    els.hexError.hidden = false;
+  }
+
+  // A value the user is still typing is not an error, it is simply not
+  // committed yet. Only junk earns the invalid style.
+  function isHexPrefix(value) {
+    return value === '' || /^#?[0-9a-f]{0,6}$/i.test(value);
+  }
+
+  function commitTypedHex() {
+    var norm = C.normalizeHex(els.hexInput.value);
+    if (!norm) {
+      markHexError();
+      return false;
+    }
+    els.hexInput.value = norm;
+    clearHexError();
+    setHex(norm);
+    return true;
+  }
+
+  function wireHexInput() {
     els.hexInput.addEventListener('input', function () {
-      var norm = C.normalizeHex(els.hexInput.value);
-      if (norm) {
-        els.hexInput.classList.remove('is-invalid');
-        els.hexError.hidden = true;
-        state.hex = norm;
-        render({ syncHex: false });
-      } else {
-        els.hexInput.classList.add('is-invalid');
-        els.hexInput.setAttribute('aria-invalid', 'true');
-        els.hexError.hidden = false;
+      var value = els.hexInput.value.trim();
+      if (C.isCompleteHex(value)) {
+        var next = S.fromHex(state, value);
+        if (next) {
+          state = next;
+          clearHexError();
+          render({ syncHex: false });
+        }
+        return;
+      }
+      if (isHexPrefix(value)) {
+        // Three-digit hex is valid on blur or Enter, but committing it while
+        // the user is still typing turned #636 into #663366 on the way to
+        // #6366F1.
+        clearHexError();
+        return;
+      }
+      markHexError();
+    });
+
+    els.hexInput.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        commitTypedHex();
       }
     });
 
     els.hexInput.addEventListener('blur', function () {
-      els.hexInput.value = state.hex;
-      els.hexInput.classList.remove('is-invalid');
-      els.hexInput.removeAttribute('aria-invalid');
-      els.hexError.hidden = true;
+      if (!commitTypedHex()) {
+        els.hexInput.value = currentHex();
+        clearHexError();
+      }
     });
+  }
+
+  function wireInputs() {
+    wireHexInput();
 
     els.hueSlider.addEventListener('input', function () {
       setHue(els.hueSlider.value);
@@ -593,7 +722,10 @@
   function wireExport() {
     Array.prototype.forEach.call(els.exportFormat.children, function (button) {
       button.addEventListener('click', function () {
-        state.exportFormat = button.dataset.format === 'css' ? 'css' : 'hex';
+        var value = button.dataset.format;
+        state.exportFormat = value === 'css' || value === 'tailwind' || value === 'json'
+          ? value
+          : 'hex';
         render();
       });
     });
@@ -612,6 +744,10 @@
       copyText(els.exportOutput.textContent, 'Palette copied');
     });
 
+    els.copyExport.addEventListener('click', function () {
+      copyText(els.exportOutput.textContent, 'Export copied');
+    });
+
     els.swatchRow.addEventListener('click', function (event) {
       var button = event.target.closest('.swatch');
       if (!button) return;
@@ -622,6 +758,12 @@
       var button = event.target.closest('.extra');
       if (!button) return;
       copyText(button.dataset.hex);
+    });
+
+    els.mobileStrip.addEventListener('click', function (event) {
+      var dot = event.target.closest('.mobile-swatch');
+      if (!dot) return;
+      copyText(dot.dataset.hex);
     });
   }
 

@@ -40,3 +40,48 @@ test('mix interpolates in sRGB', () => {
   assert.strictEqual(C.mix('#000000', '#FFFFFF', 1), '#FFFFFF');
   assert.strictEqual(C.mix('#000000', '#FFFFFF', 0.5), '#808080');
 });
+
+test('relative luminance uses the corrected sRGB threshold', () => {
+  // 10.1/255 is 0.0396: the old 0.03928 cutoff sent it down the power curve,
+  // the standard 0.04045 cutoff keeps it in the linear segment.
+  const channel = (v) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  const expected = channel(10.1);
+  const actual = C.relativeLuminance({ r: 10.1, g: 10.1, b: 10.1 });
+  assert.ok(Math.abs(actual - expected) < 1e-9, `expected ${expected}, got ${actual}`);
+});
+
+test('ratios are truncated to two decimals for display', () => {
+  assert.strictEqual(C.formatRatio(4.496), '4.49');
+  assert.strictEqual(C.formatRatio(4.5), '4.50');
+  assert.strictEqual(C.formatRatio(21), '21.00');
+  assert.strictEqual(C.formatRatio(2.619), '2.61');
+});
+
+test('ensureContrast steps a colour until it reads, and leaves it alone when it already does', () => {
+  const bg = '#FAFAFC';
+  const fixed = C.ensureContrast('#6366F1', bg, 4.5);
+  assert.ok(C.contrastRatio(fixed, bg) >= 4.5, `${fixed} still fails`);
+  assert.notStrictEqual(fixed, '#6366F1');
+  assert.strictEqual(C.ensureContrast('#000000', bg, 4.5), '#000000');
+});
+
+test('ensureContrast only moves the colour as far as the floor needs', () => {
+  const bg = '#FAFAFC';
+  const fixed = C.ensureContrast('#6366F1', bg, 4.5);
+  const hsl = C.rgbToHsl(C.hexToRgb(fixed));
+  const start = C.rgbToHsl(C.hexToRgb('#6366F1'));
+  assert.ok(hsl.l < start.l, 'a light background needs a darker label');
+  assert.ok(start.l - hsl.l < 0.2, 'the step should be small, not black');
+});
+
+test('a hex is complete only at six digits', () => {
+  assert.strictEqual(C.isCompleteHex('#636'), false);
+  assert.strictEqual(C.isCompleteHex('#6366F'), false);
+  assert.strictEqual(C.isCompleteHex('#6366F1'), true);
+  assert.strictEqual(C.isCompleteHex('6366F1'), true);
+  assert.strictEqual(C.isCompleteHex(''), false);
+  assert.strictEqual(C.isCompleteHex('#GGGGGG'), false);
+});
