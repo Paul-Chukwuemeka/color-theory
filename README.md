@@ -44,20 +44,23 @@ batching, and the accessibility floor.
 - Ten color roles — `bg`, `surface`, `text`, `text-muted`, `accent`,
   `accent-2`, `accent-soft`, `success`, `warning`, `danger` — plus harmony
   extras and a matching `on-*` label color for every fill.
-- Text-safe twins for the accents (`accent-text`, `accent-2-text`): the fill
-  stays exact, while labels and exported text tokens are stepped until they
-  read on the background.
+- Fill-safe accents: `accent`, `accent-2` and the semantic fills walk their
+  lightness — never their hue — until they clear the 3:1 non-text floor on
+  `surface`, then until their label clears 4.5:1. Text-safe twins
+  (`accent-text`, `accent-2-text`) are stepped separately for use as text.
 - `accent-2` is always at least 60° from `accent`, so the two stay distinct;
   monochromatic is the deliberate exception (a same-hue step).
 - Semantic colors move away from the brand hue when they would sit too close,
   then keep their contrast floor.
 - WCAG contrast ratios, truncated to two decimals, with AA / AAA / fail
-  labels and a note when a preferred white label had to be rejected.
+  labels for text, accent text and every fill label.
 - A palette size control: pick anywhere from 3 to 21 colors. Small palettes
   drop roles in priority order, larger ones add extra swatches.
-- A live preview of the palette on the screen of the app type you picked: a
-  product card, a dashboard, a lesson, a kids screen, a balance card, a vitals
-  card, or a terminal. It is decorative for assistive tech, with a text
+- A live, finished-product preview per app type: a marketing page with a live
+  invite panel, an analytics workspace, a lesson with answer feedback, a kids
+  play session, a consumer bank, a wellbeing dashboard, or a failed deploy.
+  Focus, error, disabled and failed states sit inside the product UI instead
+  of a debug row. The preview is decorative for assistive tech, with a text
   summary alongside it.
 - Copy any swatch, copy the whole palette, and export as hex, CSS custom
   properties, a Tailwind v4 `@theme` block, or JSON, for one theme or both.
@@ -82,9 +85,13 @@ batching, and the accessibility floor.
 4. **Readable text.** `text` is walked from the background until it clears the
    floor on both `bg` and `surface`. `text-muted` is mixed toward the
    background, then walked back until it clears the same floor.
-5. **Fills and labels.** Each fill keeps its exact color. `pickReadable`
-   chooses the higher-scoring label (white first, then the alternative), and
-   the contrast list notes when white was rejected.
+5. **Fills and labels.** A fill that matches the surface cannot be seen, so
+   `accent`, `accent-2`, the semantic colors and the extras walk lightness
+   until they clear 3:1 on `surface`. Light themes then deepen each filled
+   role until a white label clears 4.5:1; dark themes lighten it until a
+   near-black label does. Hue and saturation never move, mono extras step
+   until every chip is distinct, and the preview reads the resulting `on-*`
+   tokens directly.
 6. **Extras and size.** Above the ten roles, extras fan out by hue, keeping
    the accent’s hue for monochromatic and walking outwards for the rest.
    Roles are dropped in priority order for small palettes.
