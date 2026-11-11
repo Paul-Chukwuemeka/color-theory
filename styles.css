@@ -596,6 +596,12 @@ input {
   min-width: 0;
 }
 
+.contrast-note {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .contrast-ratio {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
@@ -628,8 +634,11 @@ input {
   --pv-bg: #0f172a;
   --pv-surface: #1e293b;
   --pv-text: #f8fafc;
+  --pv-text-muted: #cbd5e1;
   --pv-accent: #6366f1;
+  --pv-accent-text: #a5b4fc;
   --pv-accent2: #a763f1;
+  --pv-accent2-text: #c4b5fd;
   --pv-accent-soft: #a5b4fc;
   --pv-on-accent: #ffffff;
   --pv-on-accent2: #ffffff;
@@ -687,11 +696,11 @@ input {
 }
 
 .mock [data-text="accent"] {
-  color: var(--pv-accent);
+  color: var(--pv-accent-text);
 }
 
 .mock [data-text="accent2"] {
-  color: var(--pv-accent2);
+  color: var(--pv-accent2-text);
 }
 
 .mock [data-text="accentSoft"] {
@@ -778,7 +787,7 @@ input {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  opacity: 0.75;
+  color: var(--pv-text-muted);
   margin-bottom: 8px;
 }
 
@@ -792,7 +801,7 @@ input {
 
 .mock-text {
   font-size: 13px;
-  opacity: 0.8;
+  color: var(--pv-text-muted);
   max-width: 40ch;
 }
 
@@ -886,7 +895,7 @@ input {
 
 .mock-stats span {
   font-size: 10px;
-  opacity: 0.72;
+  color: var(--pv-text-muted);
 }
 
 .mock-states {
@@ -944,7 +953,7 @@ input {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.78;
+  color: var(--pv-text-muted);
 }
 
 .mock-kpi-value {
@@ -982,7 +991,7 @@ input {
 }
 
 .mock-row-value {
-  opacity: 0.78;
+  color: var(--pv-text-muted);
   font-variant-numeric: tabular-nums;
 }
 

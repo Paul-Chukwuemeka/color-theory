@@ -329,6 +329,12 @@
       var label = document.createElement('span');
       label.className = 'contrast-label';
       label.textContent = entry.label;
+      if (entry.note) {
+        var note = document.createElement('span');
+        note.className = 'contrast-note';
+        note.textContent = entry.note;
+        label.appendChild(note);
+      }
 
       var ratio = document.createElement('span');
       ratio.className = 'contrast-ratio';
@@ -359,8 +365,11 @@
     els.previewCard.style.setProperty('--pv-bg', palette.bg);
     els.previewCard.style.setProperty('--pv-surface', surface);
     els.previewCard.style.setProperty('--pv-text', palette.text);
+    els.previewCard.style.setProperty('--pv-text-muted', palette.textMuted || palette.text);
     els.previewCard.style.setProperty('--pv-accent', palette.accent);
+    els.previewCard.style.setProperty('--pv-accent-text', palette.accentText || palette.accent);
     els.previewCard.style.setProperty('--pv-accent2', accent2);
+    els.previewCard.style.setProperty('--pv-accent2-text', palette.accent2Text || accent2);
     els.previewCard.style.setProperty('--pv-accent-soft', accentSoft);
     els.previewCard.style.setProperty('--pv-on-accent', C.pickReadable(palette.accent, '#FFFFFF'));
     // Each label colour is measured against the fill it sits on. on-accent-2

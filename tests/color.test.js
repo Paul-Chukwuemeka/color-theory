@@ -60,6 +60,23 @@ test('ratios are truncated to two decimals for display', () => {
   assert.strictEqual(C.formatRatio(2.619), '2.61');
 });
 
+test('ensureContrast steps a colour until it reads, and leaves it alone when it already does', () => {
+  const bg = '#FAFAFC';
+  const fixed = C.ensureContrast('#6366F1', bg, 4.5);
+  assert.ok(C.contrastRatio(fixed, bg) >= 4.5, `${fixed} still fails`);
+  assert.notStrictEqual(fixed, '#6366F1');
+  assert.strictEqual(C.ensureContrast('#000000', bg, 4.5), '#000000');
+});
+
+test('ensureContrast only moves the colour as far as the floor needs', () => {
+  const bg = '#FAFAFC';
+  const fixed = C.ensureContrast('#6366F1', bg, 4.5);
+  const hsl = C.rgbToHsl(C.hexToRgb(fixed));
+  const start = C.rgbToHsl(C.hexToRgb('#6366F1'));
+  assert.ok(hsl.l < start.l, 'a light background needs a darker label');
+  assert.ok(start.l - hsl.l < 0.2, 'the step should be small, not black');
+});
+
 test('a hex is complete only at six digits', () => {
   assert.strictEqual(C.isCompleteHex('#636'), false);
   assert.strictEqual(C.isCompleteHex('#6366F'), false);

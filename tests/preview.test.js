@@ -19,6 +19,12 @@ const ROLE_VARS = {
   danger: '--pv-danger'
 };
 
+// Text made from the accents must use the readable twin, not the fill.
+const TEXT_VARS = {
+  accent: '--pv-accent-text',
+  accent2: '--pv-accent2-text'
+};
+
 const PALETTE_KEYS = Object.keys(C.buildPalette({
   hex: '#6366F1', harmonyId: 'analogous', mode: 'light'
 }));
@@ -91,10 +97,11 @@ test('every role a mockup asks for is painted from the palette', () => {
 
     for (const role of texts) {
       const bodies = rulesFor('text', role);
+      const expected = TEXT_VARS[role] || ROLE_VARS[role];
       assert.ok(bodies.length > 0, `${id}: no css rule paints [data-text="${role}"]`);
       assert.ok(
-        bodies.some((body) => body.includes('var(' + ROLE_VARS[role] + ')')),
-        `${id}: [data-text="${role}"] is not painted with ${ROLE_VARS[role]}`
+        bodies.some((body) => body.includes('var(' + expected + ')')),
+        `${id}: [data-text="${role}"] is not painted with ${expected}`
       );
     }
   }

@@ -126,7 +126,7 @@ test('an achromatic base still gets a distinct accent-2', () => {
 });
 
 test('monochromatic extras are shaped once, not twice', () => {
-  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'monochromatic', mode: 'light', appType: 'dashboard', size: 13 });
+  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'monochromatic', mode: 'light', appType: 'dashboard', size: 14 });
   const accentSat = C.rgbToHsl(C.hexToRgb(p.accent)).s;
   assert.strictEqual(p.extras.length, 4);
   p.extras.forEach((hex) => {
