@@ -3,6 +3,7 @@
 
   var C = window.ColorMath;
   var S = window.AppState;
+  var Schedule = window.Schedule;
 
   var PRESETS = [
     { name: 'Indigo', hex: '#6366F1' },
@@ -19,9 +20,10 @@
     { name: 'Slate', hex: '#64748B' }
   ];
 
-  var state = S.create();
+  var state = S.fromQuery(S.create(), window.location.search);
 
   var palettes = { light: null, dark: null };
+  var pendingSyncHex = true;
 
   var els = {
     hexInput: document.getElementById('hex-input'),
@@ -84,14 +86,12 @@
 
   function setHarmony(id) {
     state.harmonyId = id;
+    state.harmonyTouched = true;
     render();
   }
 
   function setAppType(id) {
-    var type = C.appTypeById(id);
-    state.appType = type.id;
-    state.harmonyId = type.harmonyId;
-    state.mode = type.mode;
+    state = S.applyAppType(state, id);
     render();
   }
 
@@ -107,6 +107,7 @@
 
   function setTheme(mode) {
     state.mode = mode === 'dark' ? 'dark' : 'light';
+    state.modeTouched = true;
     render();
   }
 
@@ -160,8 +161,30 @@
 
   /* ---------- Rendering ---------- */
 
+  function syncUrl() {
+    if (!window.history || !window.history.replaceState) return;
+    try {
+      window.history.replaceState(null, '', S.toQuery(state));
+    } catch (e) {
+      // A file:// or sandboxed document cannot rewrite its address; the app
+      // still works, it just cannot be shared from here.
+    }
+  }
+
+  // Render once per frame: a hue drag fires many input events, and each one
+  // used to rebuild the whole palette and every preview.
+  var scheduleRender = Schedule.createBatcher(function () {
+    var options = { syncHex: pendingSyncHex };
+    pendingSyncHex = true;
+    paint(options);
+  });
+
   function render(options) {
-    var opts = options || {};
+    if (options && options.syncHex === false) pendingSyncHex = false;
+    scheduleRender();
+  }
+
+  function paint(opts) {
     derive();
 
     var palette = activePalette();
@@ -186,6 +209,7 @@
     renderSuggestions(hsl);
     renderExport();
     renderThemeState();
+    syncUrl();
   }
 
   function renderPresetState() {
@@ -442,6 +466,7 @@
         if (!next) return;
         state = next;
         state.harmonyId = suggestion.harmonyId;
+        state.harmonyTouched = true;
         render();
       });
       els.suggestions.appendChild(button);

@@ -78,6 +78,81 @@
     return next;
   }
 
+  function knownAppType(id) {
+    for (var i = 0; i < C.APP_TYPES.length; i++) {
+      if (C.APP_TYPES[i].id === id) return C.APP_TYPES[i];
+    }
+    return null;
+  }
+
+  // Choosing an app type is a suggestion, not an override: it may set the
+  // harmony and the preview mode only while the user has not picked one.
+  function applyAppType(state, id) {
+    var type = knownAppType(id);
+    if (!type) return copy(state);
+    var next = copy(state);
+    next.appType = type.id;
+    if (!next.harmonyTouched) next.harmonyId = type.harmonyId;
+    if (!next.modeTouched) next.mode = type.mode;
+    return next;
+  }
+
+  function knownHarmony(id) {
+    for (var i = 0; i < C.HARMONIES.length; i++) {
+      if (C.HARMONIES[i].id === id) return C.HARMONIES[i];
+    }
+    return null;
+  }
+
+  // The URL is a shared copy of the state, so it is parsed defensively: a
+  // value that fails validation is ignored and the current value stays.
+  function fromQuery(state, search) {
+    var params = new URLSearchParams(typeof search === 'string' ? search.replace(/^\?/, '') : '');
+    var next = copy(state);
+
+    var hex = params.get('hex');
+    if (hex) {
+      var parsed = fromHex(next, hex);
+      if (parsed) next = parsed;
+    }
+
+    var harmony = params.get('harmony');
+    if (harmony && knownHarmony(harmony)) {
+      next.harmonyId = harmony;
+      next.harmonyTouched = true;
+    }
+
+    var mode = params.get('mode');
+    if (mode === 'light' || mode === 'dark') {
+      next.mode = mode;
+      next.modeTouched = true;
+    }
+
+    var type = params.get('type');
+    if (type && knownAppType(type)) next = applyAppType(next, type);
+
+    var size = params.get('size');
+    if (size === 'auto') {
+      next.size = null;
+    } else if (size !== null) {
+      var n = C.normalizeSize(size);
+      if (n !== null) next.size = n;
+    }
+
+    return next;
+  }
+
+  function toQuery(state) {
+    var parts = [
+      'hex=' + encodeURIComponent(hexOf(state)),
+      'type=' + encodeURIComponent(state.appType),
+      'harmony=' + encodeURIComponent(state.harmonyId),
+      'mode=' + encodeURIComponent(state.mode)
+    ];
+    if (state.size !== null) parts.push('size=' + state.size);
+    return '?' + parts.join('&');
+  }
+
   return {
     DEFAULT_HEX: DEFAULT_HEX,
     create: create,
@@ -85,6 +160,9 @@
     hexOf: hexOf,
     hueOf: hueOf,
     fromHex: fromHex,
-    setHue: setHue
+    setHue: setHue,
+    applyAppType: applyAppType,
+    fromQuery: fromQuery,
+    toQuery: toQuery
   };
 }));
