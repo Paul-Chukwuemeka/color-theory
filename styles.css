@@ -160,6 +160,7 @@ input {
 }
 
 .segmented button {
+  min-height: 24px;
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -256,6 +257,7 @@ input {
 }
 
 .chip {
+  min-height: 24px;
   border: 1px solid var(--line);
   background: var(--panel);
   color: var(--muted);
@@ -333,6 +335,7 @@ input {
 
 .hue-controls input[type="range"] {
   width: 100%;
+  min-height: 24px;
   accent-color: var(--ink);
 }
 
@@ -408,6 +411,7 @@ input {
 }
 
 .link-btn {
+  min-height: 24px;
   border: 0;
   background: none;
   padding: 0;
@@ -461,7 +465,7 @@ input {
 }
 
 .suggestion-meta {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -495,7 +499,7 @@ input {
 
 .swatch-meta {
   padding: 7px 9px;
-  font-size: 10px;
+  font-size: 11px;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -524,6 +528,7 @@ input {
 }
 
 .extra {
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -531,7 +536,7 @@ input {
   border-radius: 99px;
   padding: 3px 8px 3px 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
+  font-size: 11px;
   background: var(--panel);
   cursor: pointer;
 }
@@ -543,7 +548,7 @@ input {
 .extra-ratio {
   font-style: normal;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
   padding-left: 4px;
   border-left: 1px solid var(--line);
 }
@@ -610,7 +615,7 @@ input {
 }
 
 .pill {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
@@ -784,7 +789,7 @@ input {
 
 .mock-eyebrow {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -828,7 +833,7 @@ input {
 }
 
 .mock-tag {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 99px;
@@ -855,7 +860,7 @@ input {
 }
 
 .mock-badge {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
@@ -895,7 +900,7 @@ input {
 }
 
 .mock-stats span {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--pv-text-muted);
 }
 
@@ -907,10 +912,39 @@ input {
 }
 
 .mock-state {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 99px;
+}
+
+.mock-state.is-hover {
+  filter: brightness(1.12);
+}
+
+.mock-state.is-disabled {
+  background: var(--pv-surface);
+  color: var(--pv-text-muted);
+  border: 1px dashed var(--pv-line);
+}
+
+.mock-state.is-focus {
+  outline: 2px solid var(--pv-accent2);
+  outline-offset: 2px;
+}
+
+.mock-input {
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--pv-line);
+  background: var(--pv-surface);
+  color: var(--pv-text-muted);
+}
+
+.mock-input.is-error {
+  border-color: var(--pv-danger);
+  color: var(--pv-danger);
 }
 
 .mock-grid {
@@ -950,7 +984,7 @@ input {
 }
 
 .mock-kpi-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -964,7 +998,7 @@ input {
 }
 
 .mock-delta {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
@@ -997,7 +1031,7 @@ input {
 }
 
 .mock-pill {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 99px;
@@ -1204,7 +1238,7 @@ input {
 
 .mock-branch {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
+  font-size: 11px;
   padding: 3px 8px;
   border-radius: 6px;
 }
@@ -1319,6 +1353,35 @@ input {
 
   .swatch-chip {
     height: 64px;
+  }
+
+  .chip {
+    min-height: 32px;
+  }
+
+  .segmented button {
+    min-height: 32px;
+  }
+
+  .extra {
+    min-height: 32px;
+  }
+
+  .link-btn {
+    min-height: 32px;
+  }
+
+  .hue-controls input[type="range"] {
+    min-height: 32px;
+  }
+
+  .stepper {
+    width: 32px;
+    height: 32px;
+  }
+
+  #size-input {
+    min-height: 32px;
   }
 }
 

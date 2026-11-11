@@ -44,6 +44,7 @@
     extrasRow: document.getElementById('extras-row'),
     contrastList: document.getElementById('contrast-list'),
     previewCard: document.getElementById('preview-card'),
+    previewSummary: document.getElementById('preview-summary'),
     suggestions: document.getElementById('suggestions'),
     exportFormat: document.getElementById('export-format'),
     exportThemes: document.getElementById('export-themes'),
@@ -411,6 +412,12 @@
     els.previewCard.style.setProperty('--pv-on-danger', C.pickReadable(danger, '#FFFFFF'));
 
     els.previewCard.innerHTML = window.Preview.markup(state.appType);
+
+    var typeLabel = C.appTypeById(state.appType).label;
+    els.previewSummary.textContent = 'Preview of a ' + typeLabel + ' screen in ' +
+      state.mode + ' mode. Background ' + palette.bg + ', surface ' + surface +
+      ', text ' + palette.text + ', accent ' + palette.accent +
+      ', accent-2 ' + accent2 + '.';
 
     // A role that is not in the palette cannot be painted, so the element
     // that needed it steps out of the layout instead of showing nothing.

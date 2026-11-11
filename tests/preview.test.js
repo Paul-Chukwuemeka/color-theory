@@ -121,6 +121,16 @@ test('an unknown app type falls back to the general mockup', () => {
   assert.strictEqual(Preview.markup('nope'), Preview.markup('general'));
 });
 
+test('the general mock names the semantic roles and shows interactive states', () => {
+  const markup = Preview.markup('general');
+  assert.match(markup, />Success</);
+  assert.match(markup, />Warning</);
+  assert.match(markup, />Error</);
+  for (const state of ['is-hover', 'is-disabled', 'is-focus', 'mock-input is-error']) {
+    assert.ok(markup.includes(state), `the general mock is missing ${state}`);
+  }
+});
+
 test('mockups are distinct from each other', () => {
   const seen = new Map();
   for (const id of Preview.ids) {
