@@ -632,6 +632,41 @@
       ? rgbToHex(hslToRgb({ h: h, s: accentSat, l: accentL }))
       : accent;
 
+    // A fill that matches its background cannot be seen. Buttons, chart
+    // series, icons and chips all paint the accent as a shape, so it has to
+    // clear the 3:1 floor WCAG asks of non-text UI. Surface is the lighter
+    // panel in dark mode and the darker one in light mode, so measuring
+    // against it covers both the page and the cards. Only the lightness
+    // moves; hue and saturation stay put.
+    function visibleFill(hex) {
+      return ensureContrast(hex, surface, 3);
+    }
+
+    // A filled control carries a label, and the label has to read on the
+    // fill. Rather than flipping to black on every mid-tone fill (which is
+    // what picking the higher ratio does, and which looks like an unstyled
+    // default button), follow the tonal rule: a light-mode fill is deep
+    // enough for a white label, a dark-mode fill is light enough for a
+    // near-black one. That is also the same direction the visibility walk
+    // moves, so the two never fight.
+    function labelFill(hex) {
+      var fillHsl = rgbToHsl(hexToRgb(hex));
+      var label = light ? '#FFFFFF' : '#000000';
+      var direction = light ? -1 : 1;
+      var candidate = hex;
+      for (var i = 1; i <= 100; i++) {
+        if (contrastRatio(label, candidate) >= 4.5) return candidate;
+        candidate = rgbToHex(hslToRgb({
+          h: fillHsl.h,
+          s: fillHsl.s,
+          l: clamp(fillHsl.l + direction * 0.005 * i, 0.01, 0.99)
+        }));
+      }
+      return candidate;
+    }
+
+    accentFinal = labelFill(visibleFill(accentFinal));
+
     var rule = harmonyById(opts.harmonyId);
     var accent2;
     if (rule.partner === null) {
@@ -649,6 +684,7 @@
         accentFinal, accent2HueValue, s, l, type, rule.id === 'analogous' ? 0.6 : 1
       );
     }
+    accent2 = labelFill(visibleFill(accent2));
 
     var extraSat = shapeSaturation(s, type, 'accent');
     var extraL = clamp(l, 0.12, 0.9);
@@ -664,9 +700,12 @@
     var semantic = type.semantics[mode];
     var accentFinalHsl = rgbToHsl(hexToRgb(accentFinal));
     var accentHue = accentFinalHsl.s >= 0.1 ? accentFinalHsl.h : null;
-    var success = refineSemantic(semantic.success, accentHue, semantic, bg, 4.5);
-    var warning = refineSemantic(semantic.warning, accentHue, semantic, bg, 4.5);
-    var danger = refineSemantic(semantic.danger, accentHue, semantic, bg, 4.5);
+    // Surface is the harder background in both modes (darker than the page in
+    // light mode, lighter in dark mode), so a colour that clears it also
+    // clears the page.
+    var success = labelFill(refineSemantic(semantic.success, accentHue, semantic, surface, 4.5));
+    var warning = labelFill(refineSemantic(semantic.warning, accentHue, semantic, surface, 4.5));
+    var danger = labelFill(refineSemantic(semantic.danger, accentHue, semantic, surface, 4.5));
 
     var size = normalizeSize(opts.size);
     var keptDefs;
@@ -678,6 +717,29 @@
         .slice(0, Math.min(size, ROLE_DEFS.length));
       extras = generateExtras(h, rule.id, size - keptDefs.length, extraSat, extraL, type, accentFinal);
     }
+    // Extras are the same hue and step by lightness in a mono palette, so
+    // several can land on the same 8-bit colour once the floor pulls them
+    // apart. Walk the lightness further until every chip is distinct.
+    var usedFills = {};
+    usedFills[accentFinal] = true;
+    usedFills[accent2] = true;
+    var fillDirection = relativeLuminance(hexToRgb(surface)) > 0.18 ? -1 : 1;
+    extras = extras.map(function (extra) {
+      var adjusted = visibleFill(extra);
+      var hslExtra = rgbToHsl(hexToRgb(adjusted));
+      var candidate = adjusted;
+      var step = 0;
+      while (usedFills[candidate] && step < 40) {
+        step++;
+        candidate = rgbToHex(hslToRgb({
+          h: hslExtra.h,
+          s: hslExtra.s,
+          l: clamp(hslExtra.l + fillDirection * 0.02 * step, 0.02, 0.98)
+        }));
+      }
+      usedFills[candidate] = true;
+      return candidate;
+    });
 
     var kept = {};
     keptDefs.forEach(function (def) { kept[def.prop] = true; });
@@ -712,20 +774,19 @@
       danger: roleColor('danger')
     };
 
-    var accentText = palette.accent ? ensureContrast(palette.accent, palette.bg, 4.5) : null;
-    var accent2Text = palette.accent2 ? ensureContrast(palette.accent2, palette.bg, 4.5) : null;
-    var onAccent = palette.accent ? pickReadable(palette.accent, '#FFFFFF') : null;
-    var onAccent2 = palette.accent2 ? pickReadable(palette.accent2, '#FFFFFF') : null;
-    var onSuccess = palette.success ? pickReadable(palette.success, '#FFFFFF') : null;
-    var onWarning = palette.warning ? pickReadable(palette.warning, '#FFFFFF') : null;
-    var onDanger = palette.danger ? pickReadable(palette.danger, '#FFFFFF') : null;
-
-    function rejectedWhite(fill, chosen) {
-      if (!fill || chosen === '#FFFFFF') return null;
-      var white = contrastRatio('#FFFFFF', fill);
-      if (white >= 4.5) return null;
-      return 'White rejected (' + formatRatio(white) + ':1)';
-    }
+    // A tiny palette may not keep the surface role, so measure against
+    // whatever the text would sit on.
+    var textBg = palette.surface || palette.bg;
+    var accentText = palette.accent ? ensureContrast(palette.accent, textBg, 4.5) : null;
+    var accent2Text = palette.accent2 ? ensureContrast(palette.accent2, textBg, 4.5) : null;
+    // The fills were walked to meet these labels, so the pairing is known
+    // rather than measured after the fact.
+    var onFill = light ? '#FFFFFF' : '#000000';
+    var onAccent = palette.accent ? onFill : null;
+    var onAccent2 = palette.accent2 ? onFill : null;
+    var onSuccess = palette.success ? onFill : null;
+    var onWarning = palette.warning ? onFill : null;
+    var onDanger = palette.danger ? onFill : null;
 
     palette.accentText = accentText;
     palette.accent2Text = accent2Text;
@@ -749,20 +810,15 @@
     pushContrast('text-surface', 'Text on surface', palette.text, palette.surface);
     pushContrast('text-muted-bg', 'Muted text on background', palette.textMuted, palette.bg);
     pushContrast('accent-bg', 'Accent text on background', palette.accentText, palette.bg);
-    pushContrast('on-accent', 'Label on accent', onAccent, palette.accent,
-      rejectedWhite(palette.accent, onAccent));
+    pushContrast('on-accent', 'Label on accent', onAccent, palette.accent);
     pushContrast('accent2-bg', 'Accent-2 text on background', palette.accent2Text, palette.bg);
-    pushContrast('on-accent2', 'Label on accent-2', onAccent2, palette.accent2,
-      rejectedWhite(palette.accent2, onAccent2));
+    pushContrast('on-accent2', 'Label on accent-2', onAccent2, palette.accent2);
     pushContrast('success-bg', 'Success on background', palette.success, palette.bg);
-    pushContrast('on-success', 'Label on success', onSuccess, palette.success,
-      rejectedWhite(palette.success, onSuccess));
+    pushContrast('on-success', 'Label on success', onSuccess, palette.success);
     pushContrast('warning-bg', 'Warning on background', palette.warning, palette.bg);
-    pushContrast('on-warning', 'Label on warning', onWarning, palette.warning,
-      rejectedWhite(palette.warning, onWarning));
+    pushContrast('on-warning', 'Label on warning', onWarning, palette.warning);
     pushContrast('danger-bg', 'Danger on background', palette.danger, palette.bg);
-    pushContrast('on-danger', 'Label on danger', onDanger, palette.danger,
-      rejectedWhite(palette.danger, onDanger));
+    pushContrast('on-danger', 'Label on danger', onDanger, palette.danger);
 
     return palette;
   }

@@ -17,7 +17,8 @@ test('general is the default and reproduces the current palette', () => {
   assert.deepStrictEqual(general.roles, plain.roles);
   assert.deepStrictEqual(general.extras, plain.extras);
   assert.deepStrictEqual(general.contrast, plain.contrast);
-  assert.strictEqual(general.accent, '#6366F1');
+  assert.strictEqual(general.accent, plain.accent);
+  assert.ok(C.contrastRatio(general.onAccent, general.accent) >= 4.5);
 });
 
 test('every app type keeps text readable in both themes', () => {
@@ -107,12 +108,14 @@ test('extreme base colors still produce an in-range accent', () => {
     for (const hex of ['#0B0D14', '#FAFAFA', '#FFFFFF', '#000000']) {
       const p = C.buildPalette({ hex, harmonyId: 'analogous', mode: 'light', appType: type.id });
       const hsl = C.rgbToHsl(C.hexToRgb(p.accent));
-      if (type.id === 'general') {
-        // General hands the user's hex straight through, even an awkward one.
-        assert.strictEqual(p.accent, hex.toUpperCase());
-        continue;
-      }
-      assert.ok(hsl.l >= 0.045 && hsl.l <= 0.955, `${type.id} ${hex} accent lightness`);
+      // Every type, including General, has to paint a visible fill. A
+      // near-white base used to come straight back as a near-white accent,
+      // which made every button and chart series disappear.
+      assert.ok(
+        C.contrastRatio(p.accent, p.surface) >= 3,
+        `${type.id} ${hex} accent fill is invisible on the surface`
+      );
+      assert.ok(hsl.l >= 0 && hsl.l <= 1, `${type.id} ${hex} accent lightness`);
       assert.ok(hsl.s >= 0 && hsl.s <= 1, `${type.id} ${hex} accent saturation`);
     }
   }

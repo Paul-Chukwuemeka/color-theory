@@ -121,12 +121,14 @@ test('an unknown app type falls back to the general mockup', () => {
   assert.strictEqual(Preview.markup('nope'), Preview.markup('general'));
 });
 
-test('the general mock names the semantic roles and shows interactive states', () => {
+test('the general mock shows semantics and real interactive states', () => {
+  // The states live inside the product UI instead of a row of debug chips:
+  // a focused field, a disabled button, a field error, and a status footer.
   const markup = Preview.markup('general');
-  assert.match(markup, />Success</);
-  assert.match(markup, />Warning</);
-  assert.match(markup, />Error</);
-  for (const state of ['is-hover', 'is-disabled', 'is-focus', 'mock-input is-error']) {
+  assert.match(markup, />Operational</);
+  assert.match(markup, />EU latency</);
+  assert.match(markup, />1 incident</);
+  for (const state of ['gp-input is-focus', 'gp-btn-sm is-disabled', 'gp-error']) {
     assert.ok(markup.includes(state), `the general mock is missing ${state}`);
   }
 });
@@ -138,4 +140,30 @@ test('mockups are distinct from each other', () => {
     assert.ok(!seen.has(markup), `${id} duplicates ${seen.get(markup)}`);
     seen.set(markup, id);
   }
+});
+
+
+test('charts, gauges and donuts are painted from the palette', () => {
+  // The old preview had chart bars with no background at all, so every chart
+  // read as a lone floating slab. Data marks must name a palette variable.
+  for (const selector of [
+    '.db-area', '.db-line', '.db-dot', '.db-prev',
+    '.hl-area', '.hl-line', '.hl-ring-fill',
+    '.ft-donut', '.db-donut'
+  ]) {
+    const escaped = selector.replace('.', '\\.');
+    const rules = CSS.match(new RegExp(escaped + '\\s*\\{[^}]*\\}', 'g')) || [];
+    assert.ok(rules.length > 0, `${selector} has no rule`);
+    assert.ok(
+      rules.some((body) => /var\(--pv-/.test(body)),
+      `${selector} is not painted from the palette`
+    );
+  }
+});
+
+test('the general screen folds states into the product UI', () => {
+  // A row of chips labelled Hover / Disabled / Focus read like a debug panel.
+  const markup = Preview.markup('general');
+  assert.ok(!markup.includes('is-hover'), 'the general screen still has a hover chip');
+  assert.ok(!markup.includes('mock-states'), 'the general screen still has the states row');
 });
