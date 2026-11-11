@@ -7,6 +7,10 @@ copyable, contrast-checked UI palette.
 
 ## Open it
 
+Live: <https://paul-chukwuemeka.github.io/color-theory/>
+
+Or run it locally:
+
 ```bash
 # Option 1: open the file directly
 xdg-open index.html
@@ -26,14 +30,15 @@ npm test
 node --test
 ```
 
-The suite uses Node's built-in test runner and covers the colour maths, the
+The suite uses Node's built-in test runner and covers the color maths, the
 palette invariants, the app types, the previews, the state/URL model, render
 batching, and the accessibility floor.
 
 ## What it does
 
-- Twelve preset brand colors plus a custom hex field. HSL is the source of
-  truth, so a hue you drag survives round-trips and grey bases.
+- Twelve named preset brand colors (Indigo, Blue, Sky, Teal, Green, Lime,
+  Amber, Orange, Red, Rose, Violet, Slate) plus a custom hex field. HSL is the
+  source of truth, so a hue you drag survives round-trips and grey bases.
 - Seven app types: general, dashboard, education, kids, fintech, health,
   developer. A type shapes the neutrals, the accents, the semantic colors, the
   text contrast floor, and the harmony and theme the scheme opens in — without
@@ -56,12 +61,10 @@ batching, and the accessibility floor.
   labels for text, accent text and every fill label.
 - A palette size control: pick anywhere from 3 to 21 colors. Small palettes
   drop roles in priority order, larger ones add extra swatches.
-- A live, finished-product preview per app type: a marketing page with a live
-  invite panel, an analytics workspace, a lesson with answer feedback, a kids
-  play session, a consumer bank, a wellbeing dashboard, or a failed deploy.
-  Focus, error, disabled and failed states sit inside the product UI instead
-  of a debug row. The preview is decorative for assistive tech, with a text
-  summary alongside it.
+- A live, finished-product preview per app type, with the states that belong to
+  each screen built into the product UI instead of a debug row — see
+  [The seven previews](#the-seven-previews). The preview is decorative for
+  assistive tech, with a text summary alongside it.
 - Copy any swatch, copy the whole palette, and export as hex, CSS custom
   properties, a Tailwind v4 `@theme` block, or JSON, for one theme or both.
   “Both” CSS is three blocks: light, an explicit dark override, and an OS
@@ -70,6 +73,25 @@ batching, and the accessibility floor.
   validated on load. Junk values are ignored, never trusted.
 - A compact sticky swatch strip on small screens, and a sticky control rail on
   desktop.
+
+## The seven previews
+
+Each app type previews as a screen you might actually ship, with the states
+that state belongs to built into the product UI rather than parked in a debug
+row.
+
+| App type | Preview |
+| --- | --- |
+| General | A marketing page with a live invite panel: focused field, field error, disabled button, and a status footer with an operational, a degraded and a failed service |
+| Dashboard | An analytics workspace: KPI deltas, a revenue chart, a revenue-mix donut, and invoices in paid, pending and failed states |
+| Education | A lesson in progress with the right answer, a wrong answer, the explanation, and a progress bar with a streak |
+| Kids | A play session: the picked shape, a star count, lives left, and a step progress track |
+| Fintech | A consumer bank: a balance card, a budget donut, quick actions, and cleared, pending and declined transactions |
+| Health | A wellbeing dashboard: a readiness ring, sleep and step tiles, a week of heart rate, and a medication reminder |
+| Developer | A failed deploy: the build log with the failing line, environment tags that are set, missing or invalid, and a stopped build |
+
+Every screen paints every fill role, so a palette that drops a role shows what
+the screen looks like without it.
 
 ## How the palette is built
 
