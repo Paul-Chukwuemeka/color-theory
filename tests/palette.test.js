@@ -252,3 +252,29 @@ test('the default palette is unchanged when no size is given', () => {
   assert.strictEqual(p.roles.length, 9);
   assert.strictEqual(p.extras.length, 2);
 });
+
+test('monochromatic extras are unique at every size and base lightness', () => {
+  for (const hex of ['#FEF9C3', '#6366F1', '#0B0D14']) {
+    for (const mode of ['light', 'dark']) {
+      for (let size = 3; size <= 21; size++) {
+        const p = C.buildPalette({ hex, harmonyId: 'monochromatic', mode, size });
+        assert.strictEqual(new Set(p.extras).size, p.extras.length,
+          `${hex} ${mode} size ${size} duplicate extras: ${p.extras.join(' ')}`);
+        assert.ok(!p.extras.includes(p.accent),
+          `${hex} ${mode} size ${size} repeats the accent`);
+      }
+    }
+  }
+});
+
+test('buildPalette clamps a harmony whose partner is under 60 degrees', () => {
+  C.HARMONIES.push({ id: 'test-near', label: 'Near', partner: 30, extras: [] });
+  try {
+    const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'test-near', mode: 'light' });
+    const d = Math.abs(C.rgbToHsl(C.hexToRgb(p.accent2)).h - C.rgbToHsl(C.hexToRgb(p.accent)).h);
+    const gap = Math.min(d, 360 - d);
+    assert.ok(gap >= 57, `accent-2 is only ${gap} degrees from the accent`);
+  } finally {
+    C.HARMONIES.pop();
+  }
+});

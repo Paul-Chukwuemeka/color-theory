@@ -15,6 +15,11 @@
     return '#' + s.toUpperCase();
   }
 
+  function isCompleteHex(input) {
+    if (typeof input !== 'string') return false;
+    return /^#?[0-9a-f]{6}$/i.test(input.trim());
+  }
+
   function hexToRgb(hex) {
     const norm = normalizeHex(hex);
     if (!norm) throw new Error('Invalid hex: ' + hex);
@@ -109,7 +114,7 @@
   function relativeLuminance(rgb) {
     function channel(v) {
       const c = v / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     }
     return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b);
   }
@@ -379,18 +384,40 @@
 
   function monoExtras(baseHue, s, l, count, type) {
     var out = [];
-    var i = 1;
-    while (out.length < count && i < 30) {
-      var offset = 0.14 * Math.ceil(i / 2);
-      var sign = i % 2 === 1 ? 1 : -1;
-      var nextL = l + sign * offset;
-      if (nextL > 0.95 || nextL < 0.08) nextL = l - sign * offset;
-      var nextS = Math.max(0, s - 0.04 * (offset / 0.14));
+    var seen = {};
+    var accentHex = rgbToHex(hslToRgb({ h: baseHue, s: s, l: l }));
+    seen[accentHex] = true;
+
+    // Lightness steps on both sides of the base, nearest first, so a small
+    // palette stays close to the accent and a large one walks outwards.
+    var levels = [];
+    for (var v = 0.08; v <= 0.9501; v += 0.04) levels.push(Math.round(v * 100) / 100);
+    levels.sort(function (a, b) {
+      return Math.abs(a - l) - Math.abs(b - l) || b - a;
+    });
+
+    function add(candidateL, candidateS) {
+      var nextS = Math.max(0, Math.min(1, candidateS));
       // The saturation already carries the type's shaping; only the floor and
       // the ceiling are applied here, so the rule is not applied twice.
       if (type) nextS = Math.min(Math.max(nextS, type.accentSatMin), type.accentSatMax);
-      out.push(rgbToHex(hslToRgb({ h: baseHue, s: nextS, l: nextL })));
-      i++;
+      var hex = rgbToHex(hslToRgb({ h: baseHue, s: nextS, l: candidateL }));
+      if (seen[hex]) return;
+      seen[hex] = true;
+      out.push(hex);
+    }
+
+    // Walk candidates until the palette has count unique colours, not a fixed
+    // number of steps: the old fixed walk pushed the same lightness twice on
+    // light and dark bases.
+    var shifts = [0, -0.08, 0.08, -0.16, 0.16];
+    for (var k = 0; k < shifts.length && out.length < count; k++) {
+      for (var i = 0; i < levels.length && out.length < count; i++) {
+        var level = levels[i];
+        if (shifts[k] === 0 && Math.abs(level - l) < 0.02) continue;
+        var eased = s + shifts[k] - 0.03 * Math.min(1, Math.abs(level - l) / 0.14);
+        add(level, eased);
+      }
     }
     return out;
   }
@@ -422,6 +449,12 @@
     if (ratio >= 7) return 'AAA';
     if (ratio >= 4.5) return 'AA';
     return 'fail';
+  }
+
+  // Display only: truncate rather than round, so a ratio that is below AA
+  // never prints as 4.50 and reads like it passed.
+  function formatRatio(ratio) {
+    return (Math.floor(ratio * 100) / 100).toFixed(2);
   }
 
   function makeContrast(key, label, fg, bg) {
@@ -516,7 +549,7 @@
         h: h, s: s * 0.55, l: Math.min(l + 0.22, 0.95)
       }));
     } else {
-      var accent2HueValue = wrapHue(h + rule.partner);
+      var accent2HueValue = partnerHue(h, rule.id);
       if (type.accent2Hue === 'warm' && hueGap(35, h) >= 60) {
         accent2HueValue = 35;
       }
@@ -704,6 +737,7 @@
 
   return {
     normalizeHex: normalizeHex,
+    isCompleteHex: isCompleteHex,
     hexToRgb: hexToRgb,
     rgbToHex: rgbToHex,
     rgbToHsl: rgbToHsl,
@@ -717,6 +751,7 @@
     partnerHue: partnerHue,
     extraHues: extraHues,
     contrastLevel: contrastLevel,
+    formatRatio: formatRatio,
     buildPalette: buildPalette,
     buildSuggestions: buildSuggestions,
     pickReadable: pickReadable,

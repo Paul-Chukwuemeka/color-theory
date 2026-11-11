@@ -284,13 +284,15 @@ input {
 }
 
 .hue-ring {
+  --hue-handle-radius: 60px;
   position: relative;
   width: 150px;
   height: 150px;
   border-radius: 50%;
   background: conic-gradient(from 0deg,
-    #EF4444, #F59E0B, #84CC16, #10B981,
-    #06B6D4, #6366F1, #A855F7, #EF4444);
+    hsl(0 85% 55%), hsl(60 85% 55%), hsl(120 85% 55%),
+    hsl(180 85% 55%), hsl(240 85% 55%), hsl(300 85% 55%),
+    hsl(360 85% 55%));
   cursor: crosshair;
   touch-action: none;
 }
@@ -315,7 +317,8 @@ input {
   border: 2px solid var(--ink);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
   pointer-events: none;
-  transform: rotate(0deg) translateY(-75px);
+  --hue-angle: 0deg;
+  transform: rotate(var(--hue-angle)) translateY(calc(-1 * var(--hue-handle-radius)));
 }
 
 .hue-controls {

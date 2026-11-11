@@ -2,6 +2,7 @@
   'use strict';
 
   var C = window.ColorMath;
+  var S = window.AppState;
 
   var PRESETS = [
     { name: 'Indigo', hex: '#6366F1' },
@@ -18,15 +19,7 @@
     { name: 'Slate', hex: '#64748B' }
   ];
 
-  var state = {
-    hex: '#6366F1',
-    appType: 'general',
-    harmonyId: 'analogous',
-    mode: 'light',
-    exportFormat: 'hex',
-    exportThemes: 'light',
-    size: null
-  };
+  var state = S.create();
 
   var palettes = { light: null, dark: null };
 
@@ -64,22 +57,27 @@
   }
 
   function activeHsl() {
-    return C.rgbToHsl(C.hexToRgb(state.hex));
+    return state.hsl;
+  }
+
+  function currentHex() {
+    return S.hexOf(state);
   }
 
   function derive() {
+    var hex = currentHex();
     palettes.light = C.buildPalette({
-      hex: state.hex, harmonyId: state.harmonyId, mode: 'light', size: state.size, appType: state.appType
+      hex: hex, harmonyId: state.harmonyId, mode: 'light', size: state.size, appType: state.appType
     });
     palettes.dark = C.buildPalette({
-      hex: state.hex, harmonyId: state.harmonyId, mode: 'dark', size: state.size, appType: state.appType
+      hex: hex, harmonyId: state.harmonyId, mode: 'dark', size: state.size, appType: state.appType
     });
   }
 
   function setHex(hex) {
-    var norm = C.normalizeHex(hex);
-    if (!norm) return false;
-    state.hex = norm;
+    var next = S.fromHex(state, hex);
+    if (!next) return false;
+    state = next;
     render();
     return true;
   }
@@ -103,12 +101,7 @@
   }
 
   function setHue(deg) {
-    var hsl = activeHsl();
-    state.hex = C.rgbToHex(C.hslToRgb({
-      h: C.wrapHue(Number(deg)),
-      s: hsl.s,
-      l: hsl.l
-    }));
+    state = S.setHue(state, deg);
     render();
   }
 
@@ -176,7 +169,7 @@
     var hue = Math.round(hsl.h) % 360;
 
     if (opts.syncHex !== false) {
-      els.hexInput.value = state.hex;
+      els.hexInput.value = currentHex();
       els.hexInput.classList.remove('is-invalid');
       els.hexInput.removeAttribute('aria-invalid');
       els.hexError.hidden = true;
@@ -196,8 +189,9 @@
   }
 
   function renderPresetState() {
+    var current = currentHex();
     Array.prototype.forEach.call(els.presetGrid.children, function (button) {
-      var active = button.dataset.hex === state.hex;
+      var active = button.dataset.hex === current;
       button.classList.toggle('is-active', active);
       button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
@@ -285,7 +279,7 @@
       if (ratio < 4.5) button.classList.add('is-fill-only');
       button.dataset.hex = hex;
       button.setAttribute('aria-label',
-        'Copy extra-' + (index + 1) + ' ' + hex + ', ' + ratio.toFixed(1) + ' to 1 on the background');
+        'Copy extra-' + (index + 1) + ' ' + hex + ', ' + C.formatRatio(ratio) + ' to 1 on the background');
 
       var dot = document.createElement('i');
       dot.style.background = hex;
@@ -295,7 +289,7 @@
 
       var meta = document.createElement('em');
       meta.className = 'extra-ratio';
-      meta.textContent = ratio.toFixed(1) + ':1';
+      meta.textContent = C.formatRatio(ratio) + ':1';
 
       button.appendChild(dot);
       button.appendChild(label);
@@ -308,7 +302,7 @@
   }
 
   function renderDial(hue) {
-    els.hueHandle.style.transform = 'rotate(' + hue + 'deg) translateY(-75px)';
+    els.hueHandle.style.setProperty('--hue-angle', hue + 'deg');
     els.hueSlider.value = String(hue);
     if (document.activeElement !== els.hueValue) {
       els.hueValue.value = String(hue);
@@ -338,7 +332,7 @@
 
       var ratio = document.createElement('span');
       ratio.className = 'contrast-ratio';
-      ratio.textContent = entry.ratio.toFixed(2) + ':1';
+      ratio.textContent = C.formatRatio(entry.ratio) + ':1';
 
       var pill = document.createElement('span');
       pill.className = 'pill';
@@ -435,7 +429,9 @@
       button.appendChild(strip);
       button.appendChild(text);
       button.addEventListener('click', function () {
-        state.hex = C.normalizeHex(suggestion.hex);
+        var next = S.fromHex(state, suggestion.hex);
+        if (!next) return;
+        state = next;
         state.harmonyId = suggestion.harmonyId;
         render();
       });
@@ -514,27 +510,75 @@
 
   /* ---------- Events ---------- */
 
-  function wireInputs() {
+  function clearHexError() {
+    els.hexInput.classList.remove('is-invalid');
+    els.hexInput.removeAttribute('aria-invalid');
+    els.hexError.hidden = true;
+  }
+
+  function markHexError() {
+    els.hexInput.classList.add('is-invalid');
+    els.hexInput.setAttribute('aria-invalid', 'true');
+    els.hexError.hidden = false;
+  }
+
+  // A value the user is still typing is not an error, it is simply not
+  // committed yet. Only junk earns the invalid style.
+  function isHexPrefix(value) {
+    return value === '' || /^#?[0-9a-f]{0,6}$/i.test(value);
+  }
+
+  function commitTypedHex() {
+    var norm = C.normalizeHex(els.hexInput.value);
+    if (!norm) {
+      markHexError();
+      return false;
+    }
+    els.hexInput.value = norm;
+    clearHexError();
+    setHex(norm);
+    return true;
+  }
+
+  function wireHexInput() {
     els.hexInput.addEventListener('input', function () {
-      var norm = C.normalizeHex(els.hexInput.value);
-      if (norm) {
-        els.hexInput.classList.remove('is-invalid');
-        els.hexError.hidden = true;
-        state.hex = norm;
-        render({ syncHex: false });
-      } else {
-        els.hexInput.classList.add('is-invalid');
-        els.hexInput.setAttribute('aria-invalid', 'true');
-        els.hexError.hidden = false;
+      var value = els.hexInput.value.trim();
+      if (C.isCompleteHex(value)) {
+        var next = S.fromHex(state, value);
+        if (next) {
+          state = next;
+          clearHexError();
+          render({ syncHex: false });
+        }
+        return;
+      }
+      if (isHexPrefix(value)) {
+        // Three-digit hex is valid on blur or Enter, but committing it while
+        // the user is still typing turned #636 into #663366 on the way to
+        // #6366F1.
+        clearHexError();
+        return;
+      }
+      markHexError();
+    });
+
+    els.hexInput.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        commitTypedHex();
       }
     });
 
     els.hexInput.addEventListener('blur', function () {
-      els.hexInput.value = state.hex;
-      els.hexInput.classList.remove('is-invalid');
-      els.hexInput.removeAttribute('aria-invalid');
-      els.hexError.hidden = true;
+      if (!commitTypedHex()) {
+        els.hexInput.value = currentHex();
+        clearHexError();
+      }
     });
+  }
+
+  function wireInputs() {
+    wireHexInput();
 
     els.hueSlider.addEventListener('input', function () {
       setHue(els.hueSlider.value);
