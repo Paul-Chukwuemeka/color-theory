@@ -37,8 +37,15 @@ test('interactive controls clear a 24px target, and 32px on phones', () => {
   }
 });
 
-test('the rail sticks on desktop and a compact swatch strip sticks on mobile', () => {
-  assert.match(HTML, /<div id="mobile-strip" class="mobile-strip" aria-hidden="true"><\/div>/);
+test('a blocked copy still tells the user what happened', () => {
+  // Without a clipboard permission the copy silently did nothing; the user
+  // was left guessing whether the click registered.
+  assert.match(APP, /Copy blocked by the browser/);
+  assert.match(APP, /function blocked\(\)/);
+  assert.match(APP, /clearSelection\(\);/);
+});
+
+test('the rail sticks on desktop and a compact swatch strip sticks on mobile', () => {  assert.match(HTML, /<div id="mobile-strip" class="mobile-strip" aria-hidden="true"><\/div>/);
   assert.match(APP, /mobileStrip:/);
   assert.match(APP, /mobileStrip\.appendChild/);
   const desktop = CSS.match(/@media \(min-width: 901px\) \{[\s\S]*?\n\}/);

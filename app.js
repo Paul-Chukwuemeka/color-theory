@@ -527,7 +527,13 @@
     }, 1600);
   }
 
-  function fallbackCopy(text) {
+  // Selecting the text is the last resort: some browsers refuse both the
+  // clipboard API and the execCommand fallback, and the user should still be
+  // able to copy with the keyboard.
+  var selectedArea = null;
+
+  function selectText(text) {
+    clearSelection();
     var area = document.createElement('textarea');
     area.value = text;
     area.setAttribute('readonly', '');
@@ -536,7 +542,19 @@
     area.style.left = '-1000px';
     document.body.appendChild(area);
     area.select();
+    selectedArea = area;
+    return area;
+  }
 
+  function clearSelection() {
+    if (selectedArea && selectedArea.parentNode) {
+      selectedArea.parentNode.removeChild(selectedArea);
+    }
+    selectedArea = null;
+  }
+
+  function fallbackCopy(text) {
+    var area = selectText(text);
     var ok = false;
     try {
       ok = document.execCommand('copy');
@@ -544,7 +562,8 @@
       ok = false;
     }
 
-    document.body.removeChild(area);
+    if (ok) clearSelection();
+    // Otherwise the text stays selected so Ctrl+C still works.
     return ok;
   }
 
@@ -552,15 +571,25 @@
     var message = confirmation || ('Copied ' + text);
 
     function succeed() {
+      clearSelection();
       showToast(message);
+    }
+
+    function blocked() {
+      // Nothing was copied. Say so, and leave the text selected so the user
+      // can still press Ctrl+C.
+      showToast('Copy blocked by the browser — the text is selected, press Ctrl+C');
     }
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(succeed, function () {
         if (fallbackCopy(text)) succeed();
+        else blocked();
       });
     } else if (fallbackCopy(text)) {
       succeed();
+    } else {
+      blocked();
     }
   }
 
