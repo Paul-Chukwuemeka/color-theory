@@ -16,17 +16,23 @@
 
   function createBatcher(run, schedule) {
     var pending = false;
+    var payload = null;
     var request = schedule || function (callback) {
       if (typeof requestAnimationFrame === 'function') return requestAnimationFrame(callback);
       return setTimeout(callback, 16);
     };
 
-    return function () {
+    return function (options) {
+      // The last call in a frame wins: a caller that changes the state after
+      // another caller asked for something special must not inherit it.
+      payload = options === undefined ? null : options;
       if (pending) return;
       pending = true;
       request(function () {
         pending = false;
-        run();
+        var next = payload;
+        payload = null;
+        run(next);
       });
     };
   }

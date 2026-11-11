@@ -40,3 +40,18 @@ test('a later change after a frame schedules a new render', () => {
   sched.flush();
   assert.strictEqual(runs, 2);
 });
+
+test('the last call in a frame decides the options the render sees', () => {
+  const sched = manualScheduler();
+  let seen = null;
+  const batch = Schedule.createBatcher((options) => { seen = options; }, sched.schedule);
+
+  batch({ syncHex: false });
+  batch({});
+  sched.flush();
+  assert.deepStrictEqual(seen, {}, 'the later plain render must not inherit syncHex: false');
+
+  batch({ syncHex: false });
+  sched.flush();
+  assert.deepStrictEqual(seen, { syncHex: false }, 'a render that asked not to sync keeps its ask');
+});

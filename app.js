@@ -23,7 +23,6 @@
   var state = S.fromQuery(S.create(), window.location.search);
 
   var palettes = { light: null, dark: null };
-  var pendingSyncHex = true;
 
   var els = {
     hexInput: document.getElementById('hex-input'),
@@ -176,15 +175,12 @@
 
   // Render once per frame: a hue drag fires many input events, and each one
   // used to rebuild the whole palette and every preview.
-  var scheduleRender = Schedule.createBatcher(function () {
-    var options = { syncHex: pendingSyncHex };
-    pendingSyncHex = true;
-    paint(options);
+  var scheduleRender = Schedule.createBatcher(function (options) {
+    paint(options || {});
   });
 
   function render(options) {
-    if (options && options.syncHex === false) pendingSyncHex = false;
-    scheduleRender();
+    scheduleRender(options || {});
   }
 
   function paint(opts) {
