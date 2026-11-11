@@ -45,6 +45,7 @@
     contrastList: document.getElementById('contrast-list'),
     previewCard: document.getElementById('preview-card'),
     previewSummary: document.getElementById('preview-summary'),
+    mobileStrip: document.getElementById('mobile-strip'),
     suggestions: document.getElementById('suggestions'),
     exportFormat: document.getElementById('export-format'),
     exportThemes: document.getElementById('export-themes'),
@@ -324,6 +325,23 @@
         button.title = 'Low contrast on the background — use as a fill, not text';
       }
       els.extrasRow.appendChild(button);
+    });
+
+    // A second, compact copy of the swatches for the sticky mobile strip.
+    els.mobileStrip.innerHTML = '';
+    function addMobileSwatch(hex, label) {
+      var dot = document.createElement('span');
+      dot.className = 'mobile-swatch';
+      dot.dataset.hex = hex;
+      dot.style.background = hex;
+      dot.title = label + ' ' + hex;
+      els.mobileStrip.appendChild(dot);
+    }
+    palette.roles.forEach(function (role) {
+      addMobileSwatch(role.hex, role.key);
+    });
+    palette.extras.forEach(function (hex, index) {
+      addMobileSwatch(hex, 'extra-' + (index + 1));
     });
   }
 
@@ -715,6 +733,12 @@
       var button = event.target.closest('.extra');
       if (!button) return;
       copyText(button.dataset.hex);
+    });
+
+    els.mobileStrip.addEventListener('click', function (event) {
+      var dot = event.target.closest('.mobile-swatch');
+      if (!dot) return;
+      copyText(dot.dataset.hex);
     });
   }
 

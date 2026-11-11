@@ -113,6 +113,12 @@ input {
   min-width: 0;
 }
 
+/* The compact palette strip is a mobile-only shortcut. The real swatch grid
+   still carries the labels and the keyboard path. */
+.mobile-strip {
+  display: none;
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -839,6 +845,13 @@ input {
   border-radius: 99px;
 }
 
+.mock-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .mock-panel {
   background: var(--pv-surface);
   border: 1px solid var(--pv-line);
@@ -1327,9 +1340,42 @@ input {
 
 /* ---------- Responsive ---------- */
 
+@media (min-width: 901px) {
+  .rail {
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-width: thin;
+  }
+}
+
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mobile-strip {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    gap: 5px;
+    padding: 8px 16px;
+    background: rgba(244, 244, 245, 0.96);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    backdrop-filter: blur(6px);
+  }
+
+  .mobile-swatch {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    border-radius: 6px;
+    border: 1px solid rgba(24, 24, 27, 0.14);
+    cursor: pointer;
   }
 }
 
@@ -1341,6 +1387,10 @@ input {
   .layout {
     padding: 12px 14px 40px;
     gap: 12px;
+  }
+
+  .mobile-strip {
+    padding: 8px 14px;
   }
 
   .panel {
@@ -1389,37 +1439,4 @@ input {
   .toast {
     transition: none;
   }
-}
-
-/* Surface tone on small elements inside a mock. They need an edge, because
-   the card they sit on is often the same tone. */
-.mock-badge.is-surface,
-.mock-pill.is-surface {
-  background: var(--pv-surface);
-  color: var(--pv-on-surface);
-  border: 1px solid var(--pv-line);
-}
-
-.mock-shape.is-surface {
-  background: var(--pv-surface);
-  color: var(--pv-on-surface);
-  border: 1px solid var(--pv-line);
-}
-
-.mock-answer.is-plain {
-  background: var(--pv-surface);
-}
-
-.mock-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-/* Cards keep their edges when the surface tone falls back to the background. */
-.mock-panel,
-.mock-rows,
-.mock-kpi {
-  border: 1px solid var(--pv-line);
 }

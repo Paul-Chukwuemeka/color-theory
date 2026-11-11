@@ -1,0 +1,10 @@
+{
+  "name": "color-theory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Turn one color into a contrast-checked UI palette.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}

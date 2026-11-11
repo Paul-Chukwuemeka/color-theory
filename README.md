@@ -1,5 +1,7 @@
 # Color Theory
 
+![Color Theory](screenshot.png)
+
 A small, static tool for turning one color — or one harmony rule — into a
 copyable, contrast-checked UI palette.
 
@@ -9,7 +11,7 @@ copyable, contrast-checked UI palette.
 # Option 1: open the file directly
 xdg-open index.html
 
-# Option 2: serve it
+# Option 2: serve it, so the shareable URL works
 python3 -m http.server 8000
 # then visit http://localhost:8000
 ```
@@ -19,28 +21,83 @@ No install, no build step, no dependencies.
 ## Test
 
 ```bash
-node --test tests/color.test.js tests/palette.test.js tests/app-types.test.js
+npm test
+# or, with no npm:
+node --test
 ```
+
+The suite uses Node's built-in test runner and covers the colour maths, the
+palette invariants, the app types, the previews, the state/URL model, render
+batching, and the accessibility floor.
 
 ## What it does
 
-- Twelve preset brand colors plus a custom hex field.
+- Twelve preset brand colors plus a custom hex field. HSL is the source of
+  truth, so a hue you drag survives round-trips and grey bases.
 - Seven app types: general, dashboard, education, kids, fintech, health,
   developer. A type shapes the neutrals, the accents, the semantic colors, the
-  text contrast floor, and the harmony and theme the scheme opens in.
+  text contrast floor, and the harmony and theme the scheme opens in — without
+  overwriting a harmony or theme you have already chosen.
 - Six harmony rules: analogous, complementary, split-complementary, triadic,
   tetradic, monochromatic.
 - A draggable hue ring and a hue slider.
-- Nine color roles — `bg`, `surface`, `text`, `accent`, `accent-2`,
-  `accent-soft`, `success`, `warning`, `danger` — plus harmony extras and a
-  matching `on-*` label color for every fill.
-- `accent-2` is always at least 60° from `accent`, so the two stay distinct.
-- WCAG contrast ratios with AA / AAA / fail labels, including whether each
-  accent can be used as text on the background.
+- Ten color roles — `bg`, `surface`, `text`, `text-muted`, `accent`,
+  `accent-2`, `accent-soft`, `success`, `warning`, `danger` — plus harmony
+  extras and a matching `on-*` label color for every fill.
+- Text-safe twins for the accents (`accent-text`, `accent-2-text`): the fill
+  stays exact, while labels and exported text tokens are stepped until they
+  read on the background.
+- `accent-2` is always at least 60° from `accent`, so the two stay distinct;
+  monochromatic is the deliberate exception (a same-hue step).
+- Semantic colors move away from the brand hue when they would sit too close,
+  then keep their contrast floor.
+- WCAG contrast ratios, truncated to two decimals, with AA / AAA / fail
+  labels and a note when a preferred white label had to be rejected.
 - A palette size control: pick anywhere from 3 to 21 colors. Small palettes
   drop roles in priority order, larger ones add extra swatches.
 - A live preview of the palette on the screen of the app type you picked: a
   product card, a dashboard, a lesson, a kids screen, a balance card, a vitals
-  card, or a terminal. Every role is painted somewhere in it.
-- Copy any swatch, copy the whole palette, and export as hex or CSS custom
-  properties, for one theme or both.
+  card, or a terminal. It is decorative for assistive tech, with a text
+  summary alongside it.
+- Copy any swatch, copy the whole palette, and export as hex, CSS custom
+  properties, a Tailwind v4 `@theme` block, or JSON, for one theme or both.
+  “Both” CSS is three blocks: light, an explicit dark override, and an OS
+  preference fallback that cannot beat a deliberate light choice.
+- Shareable URLs: `?hex=&type=&harmony=&mode=&size=` is kept in sync and
+  validated on load. Junk values are ignored, never trusted.
+- A compact sticky swatch strip on small screens, and a sticky control rail on
+  desktop.
+
+## How the palette is built
+
+1. **One hue in, HSL state out.** The base color is stored as `{h, s, l}`
+   floats. Hex is derived for display and palette building, so dragging the
+   hue ring never drifts and an achromatic base keeps the hue you moved to.
+2. **Harmony.** The harmony rule supplies a partner hue and extra hues. The
+   partner is clamped to at least 60° from the accent, so `accent-2` is always
+   a second accent rather than a near-copy.
+3. **App type.** The type shapes saturation and lightness, sets the neutral
+   cast, picks the text contrast floor, and contributes the device-appropriate
+   semantic colors for light and dark.
+4. **Readable text.** `text` is walked from the background until it clears the
+   floor on both `bg` and `surface`. `text-muted` is mixed toward the
+   background, then walked back until it clears the same floor.
+5. **Fills and labels.** Each fill keeps its exact color. `pickReadable`
+   chooses the higher-scoring label (white first, then the alternative), and
+   the contrast list notes when white was rejected.
+6. **Extras and size.** Above the ten roles, extras fan out by hue, keeping
+   the accent’s hue for monochromatic and walking outwards for the rest.
+   Roles are dropped in priority order for small palettes.
+7. **Contrast.** Ratios use the corrected sRGB luminance threshold
+   (`0.04045`). Display truncates rather than rounds, so 4.496 never prints as
+   “4.50” and pretends to pass.
+
+## Cache busting
+
+Every stylesheet and script is loaded with a `?v=N` query in `index.html`.
+Bump that number whenever you change CSS or JS so browsers and the GitHub
+Pages CDN fetch the new file instead of a cached copy.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

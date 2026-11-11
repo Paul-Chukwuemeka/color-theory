@@ -36,3 +36,16 @@ test('interactive controls clear a 24px target, and 32px on phones', () => {
     assert.match(phone[0], rule, `${selector} is not 32px on phones`);
   }
 });
+
+test('the rail sticks on desktop and a compact swatch strip sticks on mobile', () => {
+  assert.match(HTML, /<div id="mobile-strip" class="mobile-strip" aria-hidden="true"><\/div>/);
+  assert.match(APP, /mobileStrip:/);
+  assert.match(APP, /mobileStrip\.appendChild/);
+  const desktop = CSS.match(/@media \(min-width: 901px\) \{[\s\S]*?\n\}/);
+  assert.ok(desktop, 'no desktop media query');
+  assert.match(desktop[0], /\.rail\s*\{[^}]*position:\s*sticky/);
+  const mobile = CSS.match(/@media \(max-width: 900px\) \{[\s\S]*?\n\}/);
+  assert.ok(mobile, 'no mobile media query');
+  assert.match(mobile[0], /\.mobile-strip\s*\{[^}]*position:\s*sticky/);
+});
+
