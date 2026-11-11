@@ -632,6 +632,18 @@
       ? rgbToHex(hslToRgb({ h: h, s: accentSat, l: accentL }))
       : accent;
 
+    // A fill that matches its background cannot be seen. Buttons, chart
+    // series, icons and chips all paint the accent as a shape, so it has to
+    // clear the 3:1 floor WCAG asks of non-text UI. Surface is the lighter
+    // panel in dark mode and the darker one in light mode, so measuring
+    // against it covers both the page and the cards. Only the lightness
+    // moves; hue and saturation stay put.
+    function visibleFill(hex) {
+      return ensureContrast(hex, surface, 3);
+    }
+
+    accentFinal = visibleFill(accentFinal);
+
     var rule = harmonyById(opts.harmonyId);
     var accent2;
     if (rule.partner === null) {
@@ -649,6 +661,7 @@
         accentFinal, accent2HueValue, s, l, type, rule.id === 'analogous' ? 0.6 : 1
       );
     }
+    accent2 = visibleFill(accent2);
 
     var extraSat = shapeSaturation(s, type, 'accent');
     var extraL = clamp(l, 0.12, 0.9);
@@ -664,9 +677,12 @@
     var semantic = type.semantics[mode];
     var accentFinalHsl = rgbToHsl(hexToRgb(accentFinal));
     var accentHue = accentFinalHsl.s >= 0.1 ? accentFinalHsl.h : null;
-    var success = refineSemantic(semantic.success, accentHue, semantic, bg, 4.5);
-    var warning = refineSemantic(semantic.warning, accentHue, semantic, bg, 4.5);
-    var danger = refineSemantic(semantic.danger, accentHue, semantic, bg, 4.5);
+    // Surface is the harder background in both modes (darker than the page in
+    // light mode, lighter in dark mode), so a colour that clears it also
+    // clears the page.
+    var success = refineSemantic(semantic.success, accentHue, semantic, surface, 4.5);
+    var warning = refineSemantic(semantic.warning, accentHue, semantic, surface, 4.5);
+    var danger = refineSemantic(semantic.danger, accentHue, semantic, surface, 4.5);
 
     var size = normalizeSize(opts.size);
     var keptDefs;
@@ -678,6 +694,29 @@
         .slice(0, Math.min(size, ROLE_DEFS.length));
       extras = generateExtras(h, rule.id, size - keptDefs.length, extraSat, extraL, type, accentFinal);
     }
+    // Extras are the same hue and step by lightness in a mono palette, so
+    // several can land on the same 8-bit colour once the floor pulls them
+    // apart. Walk the lightness further until every chip is distinct.
+    var usedFills = {};
+    usedFills[accentFinal] = true;
+    usedFills[accent2] = true;
+    var fillDirection = relativeLuminance(hexToRgb(surface)) > 0.18 ? -1 : 1;
+    extras = extras.map(function (extra) {
+      var adjusted = visibleFill(extra);
+      var hslExtra = rgbToHsl(hexToRgb(adjusted));
+      var candidate = adjusted;
+      var step = 0;
+      while (usedFills[candidate] && step < 40) {
+        step++;
+        candidate = rgbToHex(hslToRgb({
+          h: hslExtra.h,
+          s: hslExtra.s,
+          l: clamp(hslExtra.l + fillDirection * 0.02 * step, 0.02, 0.98)
+        }));
+      }
+      usedFills[candidate] = true;
+      return candidate;
+    });
 
     var kept = {};
     keptDefs.forEach(function (def) { kept[def.prop] = true; });
@@ -712,8 +751,11 @@
       danger: roleColor('danger')
     };
 
-    var accentText = palette.accent ? ensureContrast(palette.accent, palette.bg, 4.5) : null;
-    var accent2Text = palette.accent2 ? ensureContrast(palette.accent2, palette.bg, 4.5) : null;
+    // A tiny palette may not keep the surface role, so measure against
+    // whatever the text would sit on.
+    var textBg = palette.surface || palette.bg;
+    var accentText = palette.accent ? ensureContrast(palette.accent, textBg, 4.5) : null;
+    var accent2Text = palette.accent2 ? ensureContrast(palette.accent2, textBg, 4.5) : null;
     var onAccent = palette.accent ? pickReadable(palette.accent, '#FFFFFF') : null;
     var onAccent2 = palette.accent2 ? pickReadable(palette.accent2, '#FFFFFF') : null;
     var onSuccess = palette.success ? pickReadable(palette.success, '#FFFFFF') : null;

@@ -75,10 +75,37 @@ test('fill label colors pass AA on every filled role', () => {
 test('extreme accents produce a valid palette', () => {
   for (const hex of ['#000000', '#FFFFFF', '#808080']) {
     const p = C.buildPalette({ hex, harmonyId: 'complementary', mode: 'dark' });
-    assert.strictEqual(p.accent, hex);
+    // The accent keeps the base's hue but walks its lightness until the fill
+    // can be seen at the 3:1 non-text floor.
+    assert.ok(C.contrastRatio(p.accent, p.surface) >= 3, `${hex} accent/surface`);
     assert.ok(Number.isFinite(C.contrastRatio(p.text, p.bg)));
     assert.ok(C.contrastRatio(p.text, p.bg) >= 4.5, `${hex} text/bg`);
     assert.ok(C.contrastRatio(p.text, p.surface) >= 4.5, `${hex} text/surface`);
+  }
+});
+
+test('every fill stays visible against the surface at extreme bases', () => {
+  // A fill painted in the accent, accent-2 or an extra must not vanish into
+  // the card it sits on. Before the 3:1 walk, a near-white base produced a
+  // near-white accent and every button, chart series and chip disappeared.
+  for (const hex of ['#FFFFFF', '#FAFAFA', '#FEF9C3', '#808080', '#0B0D14', '#000000']) {
+    for (const mode of ['light', 'dark']) {
+      for (const harmonyId of ['analogous', 'monochromatic', 'complementary']) {
+        const p = C.buildPalette({ hex, harmonyId, mode, appType: 'general', size: 15 });
+        for (const key of ['accent', 'accent2']) {
+          assert.ok(
+            C.contrastRatio(p[key], p.surface) >= 2.95,
+            `${hex} ${mode} ${harmonyId}: ${key} is invisible on the surface`
+          );
+        }
+        for (const extra of p.extras) {
+          assert.ok(
+            C.contrastRatio(extra, p.surface) >= 2.95,
+            `${hex} ${mode} ${harmonyId}: extra ${extra} is invisible on the surface`
+          );
+        }
+      }
+    }
   }
 });
 
