@@ -17,7 +17,8 @@ test('general is the default and reproduces the current palette', () => {
   assert.deepStrictEqual(general.roles, plain.roles);
   assert.deepStrictEqual(general.extras, plain.extras);
   assert.deepStrictEqual(general.contrast, plain.contrast);
-  assert.strictEqual(general.accent, '#6366F1');
+  assert.strictEqual(general.accent, plain.accent);
+  assert.ok(C.contrastRatio(general.onAccent, general.accent) >= 4.5);
 });
 
 test('every app type keeps text readable in both themes', () => {

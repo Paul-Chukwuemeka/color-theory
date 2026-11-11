@@ -411,7 +411,7 @@
     els.previewCard.style.setProperty('--pv-accent2', accent2);
     els.previewCard.style.setProperty('--pv-accent2-text', palette.accent2Text || accent2);
     els.previewCard.style.setProperty('--pv-accent-soft', accentSoft);
-    els.previewCard.style.setProperty('--pv-on-accent', C.pickReadable(palette.accent, '#FFFFFF'));
+    els.previewCard.style.setProperty('--pv-on-accent', palette.onAccent || '#FFFFFF');
     // Each label colour is measured against the fill it sits on. on-accent-2
     // is the palette's own token for accent-2; on-soft and on-surface are
     // measured against the soft tint and the surface respectively.
@@ -421,9 +421,9 @@
     els.previewCard.style.setProperty('--pv-success', success);
     els.previewCard.style.setProperty('--pv-warning', warning);
     els.previewCard.style.setProperty('--pv-danger', danger);
-    els.previewCard.style.setProperty('--pv-on-success', C.pickReadable(success, '#FFFFFF'));
-    els.previewCard.style.setProperty('--pv-on-warning', C.pickReadable(warning, '#FFFFFF'));
-    els.previewCard.style.setProperty('--pv-on-danger', C.pickReadable(danger, '#FFFFFF'));
+    els.previewCard.style.setProperty('--pv-on-success', palette.onSuccess || '#FFFFFF');
+    els.previewCard.style.setProperty('--pv-on-warning', palette.onWarning || '#FFFFFF');
+    els.previewCard.style.setProperty('--pv-on-danger', palette.onDanger || '#FFFFFF');
 
     els.previewCard.innerHTML = window.Preview.markup(state.appType);
 

@@ -32,9 +32,12 @@ test('extra hues follow the table', () => {
   assert.deepStrictEqual(C.extraHues(10, 'monochromatic'), []);
 });
 
-test('accent is the input verbatim', () => {
+test('accent keeps the input hue and is deep enough for its label', () => {
   const p = C.buildPalette({ hex: '6366f1', harmonyId: 'triadic', mode: 'light' });
-  assert.strictEqual(p.accent, '#6366F1');
+  const input = C.rgbToHsl(C.hexToRgb('#6366F1'));
+  const accent = C.rgbToHsl(C.hexToRgb(p.accent));
+  assert.ok(Math.abs(input.h - accent.h) <= 2, 'the accent hue drifted');
+  assert.ok(C.contrastRatio(p.onAccent, p.accent) >= 4.5, 'the label does not read on the accent');
 });
 
 test('text passes AA on bg and surface for every hue in both modes', () => {
@@ -329,12 +332,13 @@ test('the default palette is unchanged when no size is given', () => {
   assert.strictEqual(p.extras.length, 2);
 });
 
-test('accent and accent-2 get text-safe twins, and the fills stay exact', () => {
+test('accent and accent-2 get text-safe twins, and their fills carry a label', () => {
   for (const mode of ['light', 'dark']) {
     const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode });
-    assert.strictEqual(p.accent, '#6366F1');
     assert.ok(C.contrastRatio(p.accentText, p.bg) >= 4.5, `${mode} accent text`);
     assert.ok(C.contrastRatio(p.accent2Text, p.bg) >= 4.5, `${mode} accent-2 text`);
+    assert.ok(C.contrastRatio(p.onAccent, p.accent) >= 4.5, `${mode} label on accent`);
+    assert.ok(C.contrastRatio(p.onAccent2, p.accent2) >= 4.5, `${mode} label on accent-2`);
     const row = p.contrast.find((c) => c.key === 'accent-bg');
     assert.strictEqual(row.fg, p.accentText, `${mode} row uses the text-safe accent`);
     const row2 = p.contrast.find((c) => c.key === 'accent2-bg');
@@ -384,14 +388,30 @@ test('analogous puts accent-2 nearest, above the extras, and calms it', () => {
   assert.ok(accent2.s < accent.s, 'analogous accent-2 should be calmer than the accent');
 });
 
-test('a rejected white label is noted in the contrast row', () => {
-  const p = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light' });
-  const row = p.contrast.find((c) => c.key === 'on-accent');
-  assert.strictEqual(row.fg, '#000000');
-  assert.ok(/White rejected/.test(row.note), `expected a note, got ${row.note}`);
-  const passing = C.buildPalette({ hex: '#0B0D14', harmonyId: 'analogous', mode: 'light' })
-    .contrast.find((c) => c.key === 'on-accent');
-  assert.strictEqual(passing.note, null);
+test('fill labels follow the theme instead of flipping to black on mid-tones', () => {
+  // Picking whichever label has the higher ratio turned most saturated fills
+  // into black-on-colour buttons. A light theme now pairs every fill with a
+  // white label, and walks the fill until that label clears AA. A dark theme
+  // does the mirror image for a near-black label.
+  const pairs = [
+    ['onAccent', 'accent'],
+    ['onAccent2', 'accent2'],
+    ['onSuccess', 'success'],
+    ['onWarning', 'warning'],
+    ['onDanger', 'danger']
+  ];
+  for (const hex of ['#6366F1', '#0BDB0B', '#EF4444', '#F59E0B']) {
+    const light = C.buildPalette({ hex, harmonyId: 'analogous', mode: 'light' });
+    for (const [on, fill] of pairs) {
+      assert.strictEqual(light[on], '#FFFFFF', `light ${hex} ${on}`);
+      assert.ok(C.contrastRatio(light[on], light[fill]) >= 4.5, `light ${hex} ${on}`);
+    }
+    const dark = C.buildPalette({ hex, harmonyId: 'analogous', mode: 'dark' });
+    for (const [on, fill] of pairs) {
+      assert.strictEqual(dark[on], '#000000', `dark ${hex} ${on}`);
+      assert.ok(C.contrastRatio(dark[on], dark[fill]) >= 4.5, `dark ${hex} ${on}`);
+    }
+  }
 });
 
 test('monochromatic extras are unique at every size and base lightness', () => {
