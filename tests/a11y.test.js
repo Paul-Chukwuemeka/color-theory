@@ -22,7 +22,7 @@ test('no text is smaller than 11px', () => {
 });
 
 test('interactive controls clear a 24px target, and 32px on phones', () => {
-  for (const selector of ['.chip', '.segmented button', '.extra', '.link-btn']) {
+  for (const selector of ['.chip', '.segmented button', '.extra', '.link-btn', '.icon-link']) {
     const block = CSS.match(new RegExp('\\' + selector + '\\s*\\{[^}]*\\}', 'g')) || [];
     assert.ok(
       block.some((body) => /min-height:\s*24px/.test(body)),
@@ -31,10 +31,18 @@ test('interactive controls clear a 24px target, and 32px on phones', () => {
   }
   const phone = CSS.match(/@media \(max-width: 520px\) \{[\s\S]*?\n\}/);
   assert.ok(phone, 'no phone media query');
-  for (const selector of ['.chip', '.segmented button', '.extra', '.link-btn']) {
+  for (const selector of ['.chip', '.segmented button', '.extra', '.link-btn', '.icon-link']) {
     const rule = new RegExp('\\' + selector + '\\s*\\{[^}]*min-height:\\s*32px[^}]*\\}');
     assert.match(phone[0], rule, `${selector} is not 32px on phones`);
   }
+});
+
+test('the header links to the repository with a named icon link', () => {
+  assert.match(HTML, /<a class="icon-link" href="https:\/\/github\.com\/[^"]+"[^>]*>/);
+  assert.match(HTML, /aria-label="Color Theory on GitHub"/);
+  assert.match(HTML, /<svg viewBox="0 0 16 16" aria-hidden="true"/);
+  assert.match(HTML, /rel="noopener noreferrer"/);
+  assert.match(HTML, /target="_blank"/);
 });
 
 test('a blocked copy still tells the user what happened', () => {

@@ -87,6 +87,39 @@ input {
   margin-top: 2px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+/* The repository link: an icon with a name, not a bare glyph. */
+.icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 24px;
+  min-height: 24px;
+  flex: none;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.icon-link:hover {
+  border-color: var(--line-strong);
+}
+
+.icon-link svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+}
+
 /* ---------- Layout ---------- */
 
 .layout {
@@ -3023,6 +3056,30 @@ input {
 @media (max-width: 520px) {
   .app-header {
     padding: 16px 14px 0;
+    align-items: center;
+  }
+
+  /* The title stays on one line and the tagline steps aside, so the theme
+     toggle and the repository link still fit beside it. */
+  .brand h1 {
+    white-space: nowrap;
+  }
+
+  .tagline {
+    display: none;
+  }
+
+  .app-header {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .segmented button {
+    padding: 4px 8px;
   }
 
   .layout {
@@ -3059,6 +3116,13 @@ input {
   }
 
   .link-btn {
+    min-height: 32px;
+  }
+
+  .icon-link {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
     min-height: 32px;
   }
 
