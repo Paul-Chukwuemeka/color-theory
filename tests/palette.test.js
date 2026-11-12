@@ -146,14 +146,17 @@ test('suggestions are three deterministic, valid schemes', () => {
   }
 });
 
-test('hex export lists roles one per line', () => {
+test('hex export lists the base color and the roles one per line', () => {
   const light = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'light' });
   const dark = C.buildPalette({ hex: '#6366F1', harmonyId: 'analogous', mode: 'dark' });
   const out = C.formatExport({ light, dark }, { format: 'hex', themes: 'light' });
   const lines = out.split('\n');
-  assert.strictEqual(lines.length, 19);
-  assert.ok(lines[0].startsWith('bg'));
-  assert.ok(/^bg\s+#[0-9A-F]{6}$/.test(lines[0]));
+  assert.strictEqual(lines.length, 20);
+  // The brand color the user typed is not a role, but it should survive the
+  // trip into an export.
+  assert.ok(/^base\s+#6366F1$/.test(lines[0]), `expected the base first, got ${lines[0]}`);
+  assert.ok(lines[1].startsWith('bg'));
+  assert.ok(/^bg\s+#[0-9A-F]{6}$/.test(lines[1]));
   assert.ok(lines.some((l) => /^text-muted\s+#[0-9A-F]{6}$/.test(l)));
   assert.ok(lines.some((l) => /^accent-2\s+#[0-9A-F]{6}$/.test(l)));
   assert.ok(lines.some((l) => /^accent-2-text\s+#[0-9A-F]{6}$/.test(l)));
@@ -308,9 +311,23 @@ test('export follows the palette size', () => {
   const out = C.formatExport({ light, dark }, { format: 'hex', themes: 'light' });
   const keys = out.split('\n').map((line) => line.trim().split(/\s+/)[0]);
   assert.deepStrictEqual(keys, [
-    'bg', 'surface', 'text', 'accent', 'accent-2',
+    'base', 'bg', 'surface', 'text', 'accent', 'accent-2',
     'on-accent', 'on-accent-2', 'accent-text', 'accent-2-text'
   ]);
+});
+
+test('every export format carries the base color', () => {
+  const light = C.buildPalette({ hex: '#1769E0', harmonyId: 'analogous', mode: 'light' });
+  const dark = C.buildPalette({ hex: '#1769E0', harmonyId: 'analogous', mode: 'dark' });
+  const css = C.formatExport({ light, dark }, { format: 'css', themes: 'light' });
+  assert.ok(css.includes('--color-base: #1769E0;'), 'css export lost the base');
+  const tailwind = C.formatExport({ light, dark }, { format: 'tailwind', themes: 'dark' });
+  assert.ok(tailwind.includes('--color-base: #1769E0;'), 'tailwind export lost the base');
+  const json = C.formatExport({ light, dark }, { format: 'json', themes: 'light' });
+  assert.strictEqual(JSON.parse(json).base, '#1769E0');
+  const both = C.formatExport({ light, dark }, { format: 'json', themes: 'both' });
+  assert.strictEqual(JSON.parse(both).light.base, '#1769E0');
+  assert.strictEqual(JSON.parse(both).dark.base, '#1769E0');
 });
 
 test('contrast rows only cover the roles that exist', () => {

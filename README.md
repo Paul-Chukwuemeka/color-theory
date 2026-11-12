@@ -70,6 +70,8 @@ batching, and the accessibility floor.
   assistive tech, with a text summary alongside it.
 - Copy any swatch, copy the whole palette, and export as hex, CSS custom
   properties, a Tailwind v4 `@theme` block, or JSON, for one theme or both.
+  Every export leads with `base`, the brand color you typed, so it survives
+  the reshaping the palette applies.
   “Both” CSS is three blocks: light, an explicit dark override, and an OS
   preference fallback that cannot beat a deliberate light choice.
 - Shareable URLs: `?hex=&type=&harmony=&mode=&size=` is kept in sync and

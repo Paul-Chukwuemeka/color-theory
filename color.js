@@ -601,6 +601,10 @@
     var accent = normalizeHex(opts.hex);
     if (!accent) throw new Error('Invalid hex: ' + opts.hex);
 
+    // The color the user typed. The palette reshapes it, so keep the input
+    // around: it is the brand color, and an export should not lose it.
+    var base = accent;
+
     var mode = opts.mode === 'dark' ? 'dark' : 'light';
     var light = mode === 'light';
     var idx = light ? 0 : 1;
@@ -762,6 +766,7 @@
     }
 
     var palette = {
+      base: base,
       bg: roleColor('bg'),
       surface: roleColor('surface'),
       text: roleColor('text'),
@@ -855,6 +860,9 @@
 
   function roleEntries(palette) {
     var entries = [];
+    // The base color is the input, not a role, but an export should still
+    // carry the brand color the user typed.
+    if (palette.base) entries.push(['base', palette.base]);
     palette.roles.forEach(function (role) {
       entries.push([role.key, role.hex]);
     });
